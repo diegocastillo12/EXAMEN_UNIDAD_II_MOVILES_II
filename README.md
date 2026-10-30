@@ -36,6 +36,83 @@ La app cuenta con implementaciones de acceso y onboarding por cuenta, perfil, ma
 
 Explorar, la web pública QR y la entrega real de alertas tienen trabajo pendiente. Guardar preferencias de alertas no implica que ya se envíen notificaciones. Consulta el alcance en [la guía del MVP](docs/GUIA_MVP.md).
 
+## Examen práctico de la Unidad II
+
+**Curso:** SI-988 Soluciones Móviles II<br>
+**Tipo de examen:** 4<br>
+**Historia de usuario:** el usuario puede consultar sus datos sin conexión, protegerlos frente a copias o exposición en aplicaciones recientes y borrarlos del teléfono cuando quiera.
+
+Este incremento se implementó sobre la funcionalidad real de **Guardados** de Entre Huellas. La lista de casos guardados se almacena por cuenta dentro del almacenamiento privado de la aplicación y puede recuperarse cuando la consulta al backend no está disponible.
+
+### Punto 1: guardado sin conexión y revisión desde la terminal
+
+Se añadió el botón **Guardar sin conexión** en la sección de favoritos. La lista visible se serializa y se guarda por cuenta en `files/offline_saved_cases/<cuenta>/cases.json`. Cuando la consulta remota falla, la pantalla conserva o recupera la lista local y muestra el estado **Sin conexión**.
+
+Para comprobar la primera versión del flujo se utilizó una lista de prueba y el script:
+
+```powershell
+Set-Location apps/mobile
+.\scripts\Inspect-OfflineSavedList.ps1
+```
+
+El script localiza el archivo mediante `adb shell run-as` y muestra su contenido desde la terminal. Esta revisión inicial evidenció que un archivo privado de la aplicación todavía podía leerse en texto claro, por lo que se continuó con el punto 2 para protegerlo.
+
+### Punto 2: cifrado con clave custodiada por el sistema
+
+Se reemplazó el almacenamiento en claro por un sobre cifrado con **AES-GCM de 256 bits**. Cada guardado genera un IV nuevo; el archivo conserva únicamente la versión, el algoritmo y el contenido sellado en Base64. La clave no está escrita en el código ni junto al archivo: Android la genera y la custodia mediante **Android Keystore**.
+
+Después de desinstalar y reinstalar la aplicación, se guardó nuevamente la lista y se repitió la inspección con `Inspect-OfflineSavedList.ps1`. La terminal mostró el sobre cifrado sin exponer el nombre ni los rasgos del caso. Con el modo avión activado, Guardados siguió mostrando la lista, demostrando que el descifrado local funciona sin conexión.
+
+### Punto 3: protección contra copias, recientes y borrado
+
+Se desactivaron las copias de seguridad de Android mediante `android:allowBackup="false"` y las reglas de extracción de datos. Además, la pantalla sensible utiliza `FLAG_SECURE`, por lo que su contenido no aparece en la miniatura de aplicaciones recientes ni permite capturas mientras está protegida.
+
+Desde el perfil se añadió **Borrar datos de este teléfono**. La acción elimina recursivamente las listas offline y borra primero las claves de Android Keystore; de este modo, incluso un archivo cifrado sobrante queda irrecuperable. La inspección posterior confirma que ya no existe `cases.json` para la cuenta.
+
+### Punto 4: pruebas unitarias del guardado sin conexión
+
+Se crearon tres pruebas que se ejecutan sin emulador utilizando un almacenamiento temporal y un `FakeCipher` como reemplazo del cifrado Android:
+
+1. Al guardar **Cliente Prueba**, ese texto no aparece en el archivo almacenado.
+2. Una lista de tres registros se guarda y luego se recupera igual que la original.
+3. Si no existe archivo local, la lectura devuelve una lista vacía sin producir un error.
+
+Ejecutar desde `apps/mobile`:
+
+```powershell
+flutter test --no-pub -r expanded test/exam_offline_save_unit_test.dart
+```
+
+Resultado validado: `+3: All tests passed!`.
+
+### Punto 5: archivo dañado y borrado de datos
+
+Se añadieron dos pruebas con `FakeDamagedCipher`, que permite simular un fallo de descifrado y controlar el borrado de la clave sin depender de Android:
+
+1. Si el archivo está alterado y el descifrado falla, la aplicación no se cae; devuelve una lista vacía y muestra **Datos locales no disponibles, conéctese para actualizar**.
+2. Al borrar los datos, `cases.json` deja de existir y la clave simulada queda eliminada.
+
+Ejecutar desde `apps/mobile`:
+
+```powershell
+flutter test --no-pub -r expanded test/exam_offline_damage_unit_test.dart
+```
+
+Resultado validado: `+2: All tests passed!`.
+
+### Archivos móviles principales afectados
+
+- `apps/mobile/lib/features/saved_cases/data/data_sources/saved_list_file_source.dart`: escritura, lectura, validación del sobre cifrado y borrado local.
+- `apps/mobile/lib/app/android_saved_list_cipher.dart`: integración del cifrado Android y Android Keystore.
+- `apps/mobile/android/app/src/main/kotlin/com/example/flutter_application_entrehuellas/security/OfflineListCipher.kt`: cifrado AES-GCM en Android.
+- `apps/mobile/android/app/src/main/kotlin/com/example/flutter_application_entrehuellas/security/SecureScreenProtection.kt`: protección de la pantalla frente a recientes y capturas.
+- `apps/mobile/android/app/src/main/AndroidManifest.xml`: desactivación de copias de seguridad y reglas de extracción.
+- `apps/mobile/lib/features/saved_cases/presentation/widgets/saved_cases_section.dart`: acción Guardar sin conexión.
+- `apps/mobile/lib/features/saved_cases/presentation/widgets/clear_offline_lists_button.dart`: acción Borrar datos de este teléfono.
+- `apps/mobile/scripts/Inspect-OfflineSavedList.ps1`: inspección del archivo privado con `adb shell run-as`.
+- `apps/mobile/test/exam_offline_save_unit_test.dart`: tres pruebas del guardado y lectura offline.
+- `apps/mobile/test/exam_offline_damage_unit_test.dart`: pruebas de archivo dañado y borrado completo.
+
 <a id="primeros-pasos"></a>
 
 ## 🚀 Primeros pasos
