@@ -1,0 +1,6 @@
+{
+  "version": "20261010001500",
+  "name": "lost_case_lock_timeout",
+  "traceability": "HU-05 / RF-05 / issue #5: bound publication lock waits without changing authorization or deduplication",
+  "sources": ["functions/056_lost_case_lock_timeout.sql"]
+}

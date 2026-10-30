@@ -1,0 +1,6 @@
+{
+ "version":"20261018002800",
+ "name":"case_closure",
+ "traceability":"HU-13/#13 / RF-07. Requires027. Private recovery receipt, atomic lifecycle and cancellation.",
+ "sources":["tables/096_case_closures.sql","functions/097_case_closure_commands.sql","grants/098_case_closure_permissions.sql"]
+}

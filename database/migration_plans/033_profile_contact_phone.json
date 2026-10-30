@@ -1,0 +1,10 @@
+{
+  "version": "20261020003300",
+  "name": "profile_contact_phone",
+  "traceability": "Ampliación explícita20/10 de HU-01/05/06/07 RF-01/05/06/13: celular privado de perfil y sugerencia al autor; consentimiento por caso. Requiere032.",
+  "sources": [
+    "tables/112_profile_contact_phone.sql",
+    "functions/113_case_contact_profile_suggestion.sql",
+    "grants/114_profile_contact_phone_permissions.sql"
+  ]
+}

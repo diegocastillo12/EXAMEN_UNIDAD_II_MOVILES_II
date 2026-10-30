@@ -1,0 +1,2 @@
+import { recovery,recoveryError } from '../../utils/recovery';
+export default defineEventHandler(async event => { try { const model = await recovery(event,true), query = getQuery(event); const photo = await model.repository.photo(String(query.source),String(query.id),Number(query.index || 0)); setHeader(event,'Content-Type','image/jpeg'); return photo; } catch(e) { return recoveryError(event,e); } });

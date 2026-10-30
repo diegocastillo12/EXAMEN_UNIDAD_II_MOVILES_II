@@ -1,0 +1,13 @@
+/* Global map presentation. Only tile pixels receive the shared color matrix. */
+.location-map-wrap { position: relative; min-width: 0; border-radius: 22px; overflow: hidden; }
+.location-map { height: 280px; width: 100%; background: #f5f5f3; z-index: 0; }
+.location-map .leaflet-tile-pane { filter: url('/map-style.svg#cartography'); }
+.location-map-placeholder { height: 280px; width: 100%; }
+.location-map-wrap .location-map-placeholder { position: absolute; inset: 0; z-index: 1; }
+.location-map-wrap.invalid { outline: 2px solid #c53434; outline-offset: -2px; }
+.location-map:focus-visible { outline: 2px solid #111111; outline-offset: -2px; }
+.location-map .location-map-pin { border: 0; background: transparent; }
+.map-attribution { position: absolute; top: 8px; right: 8px; left: 76px; z-index: 1; display: flex; justify-content: flex-end; pointer-events: none; }
+.reader-shell .map-attribution a { display: inline-flex; align-items: center; justify-content: center; min-width: 48px; min-height: 48px; padding: 0 4px; background: #ffffffef; color: #454545; font: .625rem/1.2 sans-serif; text-align: right; text-decoration: none; pointer-events: auto; }
+.map-attribution a:first-child { border-radius: 12px 0 0 12px; }
+.map-attribution a:last-child { border-radius: 0 12px 12px 0; }

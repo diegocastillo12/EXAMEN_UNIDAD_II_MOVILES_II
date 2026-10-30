@@ -1,0 +1,4 @@
+revoke all on public.content_visibility,public.content_report_resolutions,public.content_moderation_decisions,public.content_moderation_access from public,anon,authenticated,service_role;
+revoke all on sequence public.content_moderation_access_id_seq from public,anon,authenticated,service_role;
+revoke all on function public.require_content_reviewer(),public.is_moderation_hidden(text,uuid),public.list_moderation_reports(boolean,timestamptz,uuid),public.read_moderation_report(uuid),public.read_moderation_evidence(uuid),public.decide_content_report(uuid,uuid,integer,integer,text,text) from public,anon,authenticated,service_role;
+grant execute on function public.require_content_reviewer(),public.list_moderation_reports(boolean,timestamptz,uuid),public.read_moderation_report(uuid),public.read_moderation_evidence(uuid),public.decide_content_report(uuid,uuid,integer,integer,text,text) to authenticated;

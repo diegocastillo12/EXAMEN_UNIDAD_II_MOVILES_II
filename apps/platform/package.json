@@ -1,0 +1,35 @@
+{
+  "name": "@entrehuellas/platform",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
+  "scripts": {
+    "dev": "nuxt dev --host 127.0.0.1 --port 5173",
+    "build": "nuxt build",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "start": "node --env-file-if-exists=.env .output/server/index.mjs",
+    "test": "node --experimental-transform-types --test tests/reader.test.mjs tests/architecture.test.mjs tests/sightings.test.mjs tests/app-sightings.test.mjs tests/moderation.test.mjs tests/access.test.mjs tests/credentials.test.mjs tests/recovery.test.mjs tests/notifications.test.mjs tests/user-blocks.test.mjs tests/appeals.test.mjs tests/statistics.test.mjs tests/matching.test.mjs",
+    "test:server": "node --test tests/production.test.mjs tests/moderation-production.test.mjs tests/access-production.test.mjs tests/credentials-production.test.mjs tests/recovery-production.test.mjs tests/notifications-production.test.mjs tests/user-blocks-production.test.mjs tests/appeals-production.test.mjs tests/statistics-production.test.mjs tests/matching-production.test.mjs",
+    "model:prepare": "node scripts/prepare-match-model.mjs",
+    "model:smoke": "node --experimental-transform-types scripts/smoke-match-model.mjs",
+    "model:evaluate": "node --experimental-transform-types scripts/evaluate-match-model.mjs"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "3.8.1",
+    "gsap": "3.15.0",
+    "leaflet": "1.9.4",
+    "sharp": "0.35.5",
+    "vue": "3.5.44",
+    "vue-router": "5.4.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "1.9.21",
+    "@types/node": "24.10.1",
+    "nuxt": "4.6.2",
+    "typescript": "6.0.3",
+    "vue-tsc": "3.3.13"
+  }
+}

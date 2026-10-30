@@ -1,0 +1,34 @@
+.reader-shell .login-layout{width:100%;min-height:100svh;display:flex;flex-direction:column}
+.reader-shell .login-screen{width:100%;max-width:488px;margin:auto;padding:56px 24px;position:relative}
+.reader-shell .login-heading{margin-bottom:32px}
+.reader-shell .login-heading h1{margin:0 0 12px;}
+.reader-shell .login-heading p{color:#656861;font-size:1rem;line-height:1.5;margin:0}
+.reader-shell .login-form{display:grid;gap:14px;min-width:0}
+.reader-shell .login-field{display:block;position:relative;min-width:0;color:#6e6e73}
+.reader-shell .login-field input{font:inherit;font-size:1rem;line-height:1.5;width:100%;min-width:0;min-height:76px;padding:32px 18px 12px 54px;border:1px solid #e0e2e8;border-radius:22px;background:#f5f5f7;color:#171918;box-shadow:0 1px 2px #17191803}
+.reader-shell .login-field input.has-toggle{padding-right:60px}
+.reader-shell .login-field-label{position:absolute;left:54px;right:18px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:1rem;line-height:1.4;transition:top .16s ease,font-size .16s ease,transform .16s ease}
+.reader-shell .login-field:has(.has-toggle) .login-field-label{right:60px}
+.reader-shell .login-field input:focus~.login-field-label,.reader-shell .login-field input:not(:placeholder-shown)~.login-field-label{top:12px;transform:none;font-size:.75rem}
+.reader-shell .login-field-icon{position:absolute;left:18px;top:26px;width:22px;height:22px;pointer-events:none;z-index:1}
+.reader-shell .login-password-toggle{position:absolute;right:8px;top:14px;display:grid;place-items:center;width:48px;height:48px;padding:12px;background:transparent;border:0;border-radius:50%;color:#6e6e73}
+.reader-shell .login-password-toggle svg{width:22px;height:22px;pointer-events:none}
+.reader-shell .login-field.invalid{color:#b53f48}
+.reader-shell .login-field.invalid input{border:2px solid #b53f48}
+.reader-shell .login-field.shake{animation:login-shake .28s ease-in-out}
+.reader-shell .login-form .login-submit{margin-top:10px;min-height:64px;font-size:1.0625rem;background:#111111;color:#ffffff;box-shadow:none;text-shadow:none}
+@keyframes login-shake{25%,75%{transform:translateX(-4px)}50%{transform:translateX(4px)}}
+@media(max-width:600px){.reader-shell .login-screen{margin:0 auto;padding:32px 24px 40px}}
+@media(max-height:600px){.reader-shell .login-screen{padding-top:28px;padding-bottom:28px}}
+@media(prefers-reduced-motion:reduce){.reader-shell .login-field.shake{animation:none}.reader-shell .login-field-label{transition:none}}
+
+.reader-shell .login-divider{display:flex;align-items:center;gap:16px;color:#6e6e73;margin:14px 0 6px;font-size:1rem;line-height:1.5}
+.reader-shell .login-divider::before,.reader-shell .login-divider::after{content:'';height:1px;background:#e0e2e8;flex:1}
+.reader-shell .login-divider span{flex-shrink:0}
+.reader-shell .login-form .login-social-button{display:flex;gap:12px;min-height:60px;width:100%;border:1px solid #dcdfe5;background:#ffffffc9;color:#171918;box-shadow:none;text-shadow:none;font-size:1rem;font-weight:500}
+.reader-shell .login-social-button img,.reader-shell .login-social-button svg{flex-shrink:0}
+.reader-shell .login-social-button span{min-width:0}
+
+.reader-shell .login-legal{margin:28px 0 0;text-align:center;font-size:.8125rem;line-height:1.75;color:#656861}
+.reader-shell .login-legal a{color:#3c537b;text-decoration:underline;text-underline-offset:3px;font-weight:500}
+

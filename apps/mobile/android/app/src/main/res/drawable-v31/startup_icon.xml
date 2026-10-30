@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keep padding proportional to the bounds Android supplies. Fixed dp layer
+     sizes can exceed the mask when the system draws into smaller bounds. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="33.3333%"
+    android:insetTop="33.3333%"
+    android:insetRight="33.3333%"
+    android:insetBottom="33.3333%">
+    <bitmap android:src="@drawable/startup_brand" android:gravity="fill" />
+</inset>

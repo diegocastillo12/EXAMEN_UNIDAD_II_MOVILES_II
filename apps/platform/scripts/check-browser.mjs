@@ -1,0 +1,67 @@
+// Local QA only. Fixtures never enter dist or the production bootstrap.
+import assert from 'node:assert/strict';
+import { mkdir, readFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
+import { productionFixture } from '../tests/server_fixture.mjs';
+import { active, rawActive, photo, slug } from '../tests/fixtures.mjs';
+
+const runtime = await import(pathToFileURL(process.env.PLAYWRIGHT_MODULE).href);
+const { chromium } = runtime.default || runtime;
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH, headless: true });
+let server;
+try {
+  const output = new URL('../../../apps/mobile/build/ui-preview/public-web/', import.meta.url);
+  await mkdir(output, { recursive: true });
+  const art = await readFile(new URL('../../../apps/mobile/assets/onboarding/dog_with_map.png', import.meta.url));
+  const fixturePage = await browser.newPage({ viewport: { width: 720, height: 720 } });
+  await fixturePage.setContent(`<body style="margin:0;background:white"><img style="width:720px;height:720px;object-fit:contain" src="data:image/png;base64,${art.toString('base64')}"></body>`);
+  await fixturePage.locator('img').evaluate(img => img.decode());
+  const jpeg = await fixturePage.screenshot({ type: 'jpeg' }); await fixturePage.close();
+  let value = active();
+  server = await productionFixture(jpeg);
+  const origin = server.origin;
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, permissions: ['clipboard-read', 'clipboard-write'] });
+  const page = await context.newPage(); const errors = [];
+  page.on('pageerror', e => { errors.push(e.message); console.error('PAGE ERROR', e.message); });
+  page.on('requestfailed', req => console.error('REQUEST FAILED', req.url(), req.failure()?.errorText));
+  page.on('console', msg => { if (/Content Security Policy|Refused to/.test(msg.text())) errors.push(msg.text()); });
+  const open = async () => { await page.goto(`${origin}/c/${slug}`); await page.waitForFunction(() => !!document.querySelector('#__nuxt')?.__vue_app__); try { await page.getByRole('heading', { name: value.name, exact: true }).waitFor({ timeout: 10000 }); } catch(e) { console.error(await page.locator('body').innerText()); console.error(errors); throw e; } await page.locator('.pet-photo').evaluate(img => img.decode()); };
+  const noOverflow = async () => assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'horizontal overflow');
+  await open(); await noOverflow();
+  assert.equal(server.reads(), 3, 'SSR metadata once + two photo authorization checks; hydration must not refetch');
+  await page.screenshot({ path: new URL('mobile.png', output).pathname.replace(/^\/(\w:)/, '$1'), fullPage: true, animations: 'disabled' });
+  await page.getByRole('button', { name: 'Copiar enlace', exact: true }).click();
+  await page.getByText('Enlace copiado', { exact: true }).waitFor();
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), `${origin}/c/${slug}`);
+  await page.getByRole('button', { name: 'Cerrar aviso' }).click();
+  server.fail(true); await page.getByRole('button', { name: 'Actualizar estado' }).click();
+  await page.getByText('No pudimos actualizar el caso.', { exact: true }).waitFor();
+  assert.equal(await page.getByRole('heading', { name: 'Luna', exact: true }).count(), 1);
+  server.fail(false); await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('#view').getAttribute('aria-busy') === 'false');
+  assert.equal(await page.getByRole('button', { name: 'Cerrar aviso' }).count(), 0, 'Retry closes its toast before refreshing');
+  assert.equal(await page.locator('.case').evaluate(el => [...el.children].every(child => getComputedStyle(child).opacity === '1')), true, 'Refresh preserves revealed content');
+  await page.setViewportSize({ width: 1280, height: 900 }); await page.goto(`${origin}/c/${slug}`);
+  await page.locator('.pet-photo').evaluate(img => img.decode()); await noOverflow();
+  await page.screenshot({ path: new URL('desktop.png', output).pathname.replace(/^\/(\w:)/, '$1'), fullPage: true, animations: 'disabled' });
+  value = { ...active(), name: 'Ñ'.repeat(80), traits: ('<script>window.bad=true</script> ' + 'rasgos '.repeat(24)).slice(0, 200), photoCount: 3 };
+  server.set({ ...rawActive(), name: value.name, traits: value.traits, photo_objects: [photo, photo, photo] });
+  await page.setViewportSize({ width: 320, height: 350 }); await page.emulateMedia({ reducedMotion: 'reduce' }); await open();
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; }); await noOverflow();
+  await page.getByRole('button', { name: 'Foto siguiente', exact: true }).click();
+  await page.getByText('2 / 3', { exact: true }).waitFor(); assert.equal(await page.evaluate(() => window.bad), undefined);
+  await page.screenshot({ path: new URL('small-text-200.png', output).pathname.replace(/^\/(\w:)/, '$1'), fullPage: true, animations: 'disabled' });
+  value = { state: 'closed', resolution: 'resolved', closedAt: '2026-10-16T18:00:00Z' };
+  server.set({ state: 'closed', resolution: 'resolved', closed_at: value.closedAt });
+  await page.getByRole('button', { name: 'Actualizar estado' }).click(); await page.getByRole('heading', { name: 'Este caso ya fue cerrado' }).waitFor();
+  assert.equal(await page.locator('.pet-photo').count(), 0);
+  value = { state: 'unavailable' }; server.set(value); await page.goto(`${origin}/c/${slug}`);
+  await page.getByRole('heading', { name: 'Este enlace no está disponible' }).waitFor(); const neutral = await page.locator('#view').innerText();
+  await page.goto(`${origin}/c/unknown`); await page.getByRole('heading', { name: 'Este enlace no está disponible' }).waitFor();
+  assert.equal(await page.locator('#view').innerText(), neutral); assert.deepEqual(errors, []);
+  console.log('Browser QA passed: mobile/desktop, 320px + 200% text, gallery, copy, offline/retry, close/revoke/unknown and CSP. Screenshots use test fixtures.');
+  await context.close();
+} finally {
+  await browser.close();
+  if (server) await server.close();
+}

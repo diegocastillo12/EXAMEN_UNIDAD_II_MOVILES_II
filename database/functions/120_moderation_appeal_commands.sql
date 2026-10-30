@@ -1,0 +1,99 @@
+-- Ownership is of the moderated content, never of the complaint against it.
+create or replace function public.owns_moderated_resource(p_kind text,p_id uuid,p_actor uuid)
+returns boolean language sql stable security definer set search_path='' as $$
+ select p_actor is not null and (
+ (p_kind='lost' and exists(select 1 from public.lost_cases where id=p_id and owner_id=p_actor)) or
+ (p_kind='found' and exists(select 1 from public.found_cases where id=p_id and owner_id=p_actor)) or
+ (p_kind='sighting' and exists(select 1 from public.public_sightings where id=p_id and reporter_id=p_actor)));
+$$;
+
+create or replace function public.read_moderation_appeal(p_decision uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare v_actor uuid:=auth.uid(); d public.content_moderation_decisions; r public.content_reports;
+ a public.moderation_appeals; v_answer jsonb;
+begin
+ select * into d from public.content_moderation_decisions where command_id=p_decision;
+ if not found or v_actor is null then raise exception using errcode='42501',message='appeal_forbidden';end if;
+ select * into r from public.content_reports where id=d.report_id;
+ if not public.owns_moderated_resource(r.resource_kind,r.resource_id,v_actor) then
+  perform public.require_content_reviewer();
+  insert into public.moderation_appeal_access(actor_id,decision_id) values(v_actor,p_decision);
+ end if;
+ select * into a from public.moderation_appeals where decision_id=p_decision;
+ select jsonb_build_object('id',id,'actor',actor_id,'reason',reason,'answeredAt',answered_at)
+ into v_answer from public.moderation_appeal_answers where appeal_id=a.id;
+ -- No complaint, reporter identity, evidence, coordinates or Storage paths.
+ return jsonb_build_object('decision',d.command_id,'kind',r.resource_kind,'resource',r.resource_id,
+ 'action',d.action,'reason',d.reason,'decidedAt',d.decided_at,
+ 'appeal',case when a.id is not null then jsonb_build_object('id',a.id,'reason',a.reason,'submittedAt',a.submitted_at,'answer',v_answer) end);
+end $$;
+
+create or replace function public.list_moderation_appeals(p_review boolean default false,p_before_time timestamptz default null,p_before_id uuid default null)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare v_actor uuid:=auth.uid(); v_items jsonb; v_next jsonb;
+begin
+ if v_actor is null then raise exception using errcode='42501',message='appeal_forbidden';end if;
+ if p_review is null or (p_before_time is null)<>(p_before_id is null) or (p_before_time is not null and not isfinite(p_before_time)) then
+  raise exception using errcode='23514',message='appeal_invalid';end if;
+ if p_review then
+  perform public.require_content_reviewer();
+  insert into public.moderation_appeal_access(actor_id) values(v_actor);
+ end if;
+ with page as (
+  select d.command_id id,d.decided_at time from public.content_moderation_decisions d
+  join public.content_reports r on r.id=d.report_id
+  where (case when p_review then exists(select 1 from public.moderation_appeals a where a.decision_id=d.command_id)
+   else public.owns_moderated_resource(r.resource_kind,r.resource_id,v_actor) end)
+  and (p_before_time is null or (d.decided_at,d.command_id)<(p_before_time,p_before_id))
+  order by d.decided_at desc,d.command_id desc limit 21
+ ), numbered as(select *,row_number() over(order by time desc,id desc) n from page)
+ select coalesce(jsonb_agg(public.read_moderation_appeal(id) order by time desc,id desc) filter(where n<=20),'[]'::jsonb),
+ case when count(*)>20 then (select jsonb_build_object('time',time,'id',id) from numbered where n=20) end
+ into v_items,v_next from numbered;
+ return jsonb_build_object('items',v_items,'next',v_next);
+end $$;
+
+create or replace function public.submit_moderation_appeal(p_id uuid,p_decision uuid,p_reason text)
+returns jsonb language plpgsql security definer set search_path='' set lock_timeout='5s' as $$
+declare v_actor uuid:=auth.uid(); v_reason text:=public.pet_trim(p_reason); a public.moderation_appeals;
+begin
+ if v_actor is null then raise exception using errcode='42501',message='appeal_forbidden';end if;
+ if p_id is null or p_id::text !~ '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ or p_decision is null or v_reason is null or char_length(v_reason) not between 1 and 1000 then
+  raise exception using errcode='23514',message='appeal_invalid';end if;
+ if not exists(select 1 from public.content_moderation_decisions d join public.content_reports r on r.id=d.report_id
+ where d.command_id=p_decision and public.owns_moderated_resource(r.resource_kind,r.resource_id,v_actor)) then
+  raise exception using errcode='42501',message='appeal_forbidden';end if;
+ -- Both command reuse and parallel new UUIDs for the same decision serialize.
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('appeal_command:'||p_id::text,0));
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('appeal_decision:'||p_decision::text,0));
+ select * into a from public.moderation_appeals where id=p_id or decision_id=p_decision;
+ if found then
+  if a.id<>p_id or a.decision_id<>p_decision or a.appellant_id<>v_actor or a.reason<>v_reason then
+   raise exception using errcode='40001',message='appeal_conflict';end if;
+ else
+  insert into public.moderation_appeals(id,decision_id,appellant_id,reason) values(p_id,p_decision,v_actor,v_reason);
+ end if;
+ return public.read_moderation_appeal(p_decision);
+end $$;
+
+create or replace function public.answer_moderation_appeal(p_id uuid,p_appeal uuid,p_reason text)
+returns jsonb language plpgsql security definer set search_path='' set lock_timeout='5s' as $$
+declare v_actor uuid:=public.require_content_reviewer(); v_reason text:=public.pet_trim(p_reason);
+ a public.moderation_appeals; v_answer public.moderation_appeal_answers;
+begin
+ if p_id is null or p_id::text !~ '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ or p_appeal is null or v_reason is null or char_length(v_reason) not between 1 and 1000 then
+  raise exception using errcode='23514',message='appeal_invalid';end if;
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('appeal_answer_command:'||p_id::text,0));
+ select * into a from public.moderation_appeals where id=p_appeal for update;
+ if not found then raise exception using errcode='42501',message='appeal_forbidden';end if;
+ select * into v_answer from public.moderation_appeal_answers where id=p_id or appeal_id=p_appeal;
+ if found then
+  if v_answer.id<>p_id or v_answer.appeal_id<>p_appeal or v_answer.actor_id<>v_actor or v_answer.reason<>v_reason then
+   raise exception using errcode='40001',message='appeal_conflict';end if;
+ else
+  insert into public.moderation_appeal_answers(id,appeal_id,actor_id,reason) values(p_id,p_appeal,v_actor,v_reason);
+ end if;
+ return public.read_moderation_appeal(a.decision_id);
+end $$;

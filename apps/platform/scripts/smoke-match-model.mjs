@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import sharp from 'sharp';
+import { resolve } from 'node:path';
+import { ClipImageEncoder } from '../server/features/matching/data/clip_image_encoder.ts';
+process.env.MATCH_MODEL_DIRECTORY ||= resolve('.cache/matching/clip-vit-b32-d15189d-q8-v1');
+const image=await sharp('../../apps/mobile/assets/onboarding/dog_with_map.png').resize(512,512,{fit:'inside'}).jpeg().toBuffer();
+const encoder=new ClipImageEncoder();const start=performance.now();
+const a=await encoder.encode(image),b=await encoder.encode(image);
+assert.equal(a.length,512);assert.ok(Math.abs(Math.hypot(...a)-1)<1e-6);
+const cosine=a.reduce((n,x,i)=>n+x*b[i],0);assert.ok(cosine>.99999);
+console.log(JSON.stringify({dimensions:a.length,norm:Math.hypot(...a),repeatCosine:cosine,elapsedMs:Math.round(performance.now()-start),scope:'Local illustration; execution smoke only, not animal identity quality evaluation'}));

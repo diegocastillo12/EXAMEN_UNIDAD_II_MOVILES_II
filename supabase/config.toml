@@ -1,0 +1,7 @@
+project_id = "entrehuellas"
+
+[functions.pet-photo-process]
+# Auth.getUser validates every session before any data or processing operation.
+verify_jwt = false
+entrypoint = "./functions/pet-photo-process/index.ts"
+static_files = ["./functions/pet-photo-process/assets/magick.wasm"]

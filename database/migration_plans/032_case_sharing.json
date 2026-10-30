@@ -1,0 +1,6 @@
+{
+ "version":"20261020003200",
+ "name":"case_sharing",
+ "traceability":"Ampliación explícita20/10, HU-07/HU-08 RF-08,13,37: compartir y descargar búsquedas públicas visibles. Requiere031; sin escritura de perfiles ni cambio del contrato QR.",
+ "sources":["functions/110_prepare_case_share.sql","grants/111_case_share_permissions.sql"]
+}

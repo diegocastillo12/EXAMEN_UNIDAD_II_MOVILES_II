@@ -1,0 +1,6 @@
+{
+  "version": "20261025004000",
+  "name": "case_matching",
+  "traceability": "HU-25/HU-26 RF-19/RF-20 issues71/72: visual matching and explicitly independent found reports",
+  "sources": ["tables/128_case_match_indexes.sql", "functions/129_case_matching.sql", "grants/130_case_matching_permissions.sql", "tables/131_independent_found_reports.sql", "functions/132_independent_found_commands.sql", "triggers/133_case_matching_invalidation.sql", "functions/134_independent_found_integrations.sql"]
+}

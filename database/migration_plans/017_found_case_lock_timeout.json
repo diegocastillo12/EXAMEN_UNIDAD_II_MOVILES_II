@@ -1,0 +1,8 @@
+{
+  "version": "20261011001700",
+  "name": "found_case_lock_timeout",
+  "traceability": "HU-06 / RF-06: bounded publication and discard lock waits",
+  "sources": [
+    "functions/061_found_case_lock_timeout.sql"
+  ]
+}

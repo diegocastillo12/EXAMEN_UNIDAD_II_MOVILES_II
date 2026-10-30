@@ -1,0 +1,6 @@
+{
+  "version": "20261023003700",
+  "name": "recovery_business_conflicts",
+  "traceability": "HU-15.2 / RF-32 / issue #48: deterministic publication conflicts use PT409; requires recovery RPCs from018, preserving settings/grants and immutable history.",
+  "sources": ["functions/123_recovery_business_conflicts.sql"]
+}

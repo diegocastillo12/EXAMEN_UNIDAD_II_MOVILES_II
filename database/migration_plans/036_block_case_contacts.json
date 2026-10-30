@@ -1,0 +1,6 @@
+{
+  "version": "20261023003600",
+  "name": "block_case_contacts",
+  "traceability": "HU-14.2 / RF-23 / issue #44: alcance confirmado por usuario, ocultar contacto/foto entre cuentas bloqueadas. Requiere034; consentimiento conservado.",
+  "sources": ["functions/122_block_case_contacts.sql"]
+}

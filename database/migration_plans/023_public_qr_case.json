@@ -1,0 +1,6 @@
+{
+  "version": "20261016002300",
+  "name": "public_qr_case",
+  "traceability": "HU-09 / RF-09 / issue #9; server-scoped QR reader, current status and irreversible owner revocation; requires 022",
+  "sources": ["functions/080_read_qr_case.sql", "functions/081_revoke_case_public_link.sql", "grants/082_qr_case_permissions.sql"]
+}

@@ -1,0 +1,6 @@
+{
+  "version": "20261023003500",
+  "name": "moderation_appeals",
+  "traceability": "HU-14.4 / RF-33 / issue #46. Private moderation appeals and audited answers. Requires030; cumulative bundle includes033.",
+  "sources": ["tables/119_moderation_appeals.sql", "functions/120_moderation_appeal_commands.sql", "grants/121_moderation_appeal_permissions.sql"]
+}

@@ -1,0 +1,9 @@
+{
+  "version": "20261009000900",
+  "name": "pet_required_fields",
+  "traceability": "HU-03 / RF-03: required size, age and traits with 200 Unicode scalar limit requested by user",
+  "sources": [
+    "functions/034_validate_pet_required_fields.sql",
+    "triggers/035_pet_required_fields_guard.sql"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "SUPABASE_URL": "https://TU_PROYECTO.supabase.co",
+  "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_TU_CLAVE_PUBLICABLE",
+  "EMAIL_OTP_VALIDITY_MINUTES": 15,
+  "PUBLIC_CASE_WEB_URL": "https://entrehuellas.app",
+  "PUBLIC_CASE_WEB_READY": false,
+  "MAP_TILE_URL": "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=TU_CLAVE_CARTO"
+}

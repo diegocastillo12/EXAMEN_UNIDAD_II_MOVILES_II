@@ -1,0 +1,5 @@
+{
+ "version":"20261016002100","name":"saved_case_list",
+ "traceability":"User extension of HU-07/RF-13: private paginated saved cases within Explore; no assigned issue",
+ "sources":["indexes/074_saved_cases_order.sql","functions/075_list_saved_cases.sql","grants/076_saved_case_list_permissions.sql"]
+}

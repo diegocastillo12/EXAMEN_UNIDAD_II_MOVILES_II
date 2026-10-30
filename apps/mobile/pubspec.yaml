@@ -1,0 +1,63 @@
+name: flutter_application_entrehuellas
+description: "Entre Huellas: recuperación colaborativa de mascotas."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_map: ^8.3.2
+  flutter_riverpod: ^3.3.2
+  go_router: ^17.2.3
+  geolocator: 14.0.2
+  http: ^1.6.0
+  image: 4.10.1
+  image_picker: 1.2.0
+  latlong2: ^0.10.1
+  shared_preferences: 2.5.5
+  supabase_flutter: ^2.18.0
+  url_launcher: ^6.3.2
+  pdf: ^3.12.0
+  printing: ^5.14.3
+  share_plus: 11.1.0
+  flutter_svg: 2.2.1
+  country_picker: 2.0.28
+  circle_flags: 5.0.1
+  drift: ^2.31.0
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  sqlite3_flutter_libs: ^0.5.42
+  crypto: ^3.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: 0.14.4
+  sqlite3: ^2.9.4
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+  assets:
+    - assets/fonts/Roboto-Regular.ttf
+    - assets/fonts/Roboto-Bold.ttf
+    - assets/branding/app_icon.png
+    - assets/branding/wordmark.svg
+    - assets/branding/only-black.svg
+    - assets/branding/google_g.png
+    - assets/onboarding/dog_waving.png
+    - assets/onboarding/dog_with_map.png
+    - assets/onboarding/dog_and_cat.png
+    - assets/illustrations/community_pets.png
+    - assets/illustrations/reunion.png
+    - assets/illustrations/dog_with_envelope.png

@@ -1,0 +1,11 @@
+{
+  "version": "20261023003400",
+  "name": "user_blocks",
+  "traceability": "HU-14.2 / RF-23 / issue #44: bloqueos propios y aplicación servidor a nuevas interacciones autenticadas. Requiere033.",
+  "sources": [
+    "tables/115_user_blocks.sql",
+    "functions/116_user_block_commands.sql",
+    "functions/117_user_block_interactions.sql",
+    "grants/118_user_block_permissions.sql"
+  ]
+}

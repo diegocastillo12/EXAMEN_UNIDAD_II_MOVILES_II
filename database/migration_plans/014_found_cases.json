@@ -1,0 +1,11 @@
+{
+  "version": "20261010001400",
+  "name": "found_cases",
+  "traceability": "HU-06 / RF-06 / issue #6: found reports without inferred ownership, safe photos and idempotent publication",
+  "sources": [
+    "tables/052_found_cases.sql",
+    "functions/053_found_case_commands.sql",
+    "policies/054_found_case_policies.sql",
+    "grants/055_found_case_permissions.sql"
+  ]
+}

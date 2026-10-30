@@ -1,0 +1,18 @@
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "../../logo/Logo EntreHuellas 512 vector inner v2@2x.png"
+  remove_alpha_ios: true
+  background_color_ios: "#3C537B"
+  web:
+    generate: true
+    image_path: "../../logo/Logo EntreHuellas 512 vector inner v2@2x.png"
+    background_color: "#3C537B"
+    theme_color: "#2C87CE"
+  windows:
+    generate: true
+    image_path: "../../logo/Logo EntreHuellas 512 vector inner v2@2x.png"
+    icon_size: 256
+  macos:
+    generate: true
+    image_path: "../../logo/Logo EntreHuellas 512 vector inner v2@2x.png"

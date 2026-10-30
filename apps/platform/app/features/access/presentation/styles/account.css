@@ -1,0 +1,54 @@
+.reader-shell .account-layout{width:100%;min-height:100svh}
+.reader-shell .account-header-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.reader-shell .account-icon{position:relative;display:grid;place-items:center;flex-shrink:0;width:48px;height:48px;padding:0;border-radius:50%;color:#6e6e73;overflow:hidden;transition:background .18s ease}
+.reader-shell .account-icon:hover{background-color:#ffffff80}
+.reader-shell .account-icon>svg{display:block;width:24px;height:24px}
+.reader-shell .account-avatar{color:#111111;font-weight:600;font-size:.9375rem}
+.reader-shell .account-avatar>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.reader-shell .account-avatar>img.avatar-pending{visibility:hidden}
+.reader-shell .account-unread{position:absolute;width:8px;height:8px;right:10px;top:9px;background:#459ff6;border-radius:50%;box-shadow:0 0 0 2px #ffffff}
+.reader-shell .account-profile-identity{display:flex;align-items:center;gap:16px;margin:8px 0 24px;overflow-wrap:anywhere}
+.reader-shell .account-profile-identity>p{font-size:1.25rem;line-height:1.4;font-weight:600;margin:0;min-width:0}
+.reader-shell .account-profile-avatar{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;overflow:hidden;background:#ffffff80;font-size:1.25rem;font-weight:600;flex-shrink:0}
+.reader-shell .account-profile-avatar img{display:block;width:100%;height:100%;object-fit:cover}
+.reader-shell .account-profile-data{margin:0 0 24px;overflow-wrap:anywhere}
+.reader-shell .account-profile-data>div{padding:16px 0;border-bottom:1px solid #869cb426}
+.reader-shell .account-profile-data dt{font-size:.875rem;color:#656861;margin-bottom:6px}
+.reader-shell .account-profile-data dd{margin:0;font-size:1rem;line-height:1.5}
+.reader-shell .account-main{max-width:1160px;min-height:65svh;padding:40px 24px calc(160px + env(safe-area-inset-bottom,0px))}
+.reader-shell .account-welcome{max-width:780px;margin-bottom:36px}
+.reader-shell .account-welcome>p:last-child{color:#656861}
+.reader-shell .account-grid{display:grid;gap:22px 40px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+.reader-shell .account-grid .home-title{grid-column:1;margin:0}
+.reader-shell .home-title span{font-weight:600;color:#459ff6;background:linear-gradient(90deg,#459ff6,#75c9ef);background-clip:text;-webkit-text-fill-color:transparent}
+.reader-shell .home-shortcuts{grid-column:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;min-width:0}
+.reader-shell .home-shortcut{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-width:0;min-height:94px;padding:16px 10px;border-radius:22px;background:#111111;color:#fff;text-decoration:none;text-align:center;font-size:.78125rem;font-weight:600;line-height:1.4;overflow-wrap:anywhere;transition:background .18s ease}
+.reader-shell .home-shortcut svg{width:25px;height:25px;flex-shrink:0}
+.reader-shell .home-shortcut:hover{background:#282828}
+.reader-shell .home-reunion{grid-column:2;grid-row:1 / span 3;min-width:0;padding:12px}
+.reader-shell .home-reunion img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:contain}
+.reader-shell .home-reunion p{padding:12px 10px 10px;margin:0;font-size:1rem;line-height:1.4;color:#6e6e73}
+.reader-shell .home-nearby{grid-column:1;min-width:0;margin-top:6px}
+.reader-shell .home-nearby>h2{font-size:1.4375rem;font-weight:700;letter-spacing:0;margin-bottom:14px;color:#111}
+.reader-shell .home-notice{padding:20px}
+.reader-shell .home-notice svg{display:block;width:28px;height:28px;margin-bottom:12px;color:#6e6e73}
+.reader-shell .home-notice h3{font-size:1.125rem;font-weight:600;line-height:1.4;margin:0 0 8px}
+.reader-shell .home-notice p{font-size:1rem;line-height:1.4;color:#6e6e73;margin:0}
+.reader-shell .home-explore{display:inline-flex;align-items:center;gap:12px;min-height:48px;margin-top:8px;color:#3c537b;font-size:.9375rem;font-weight:600;text-decoration:none}
+.reader-shell .home-explore:hover{text-decoration:underline;text-underline-offset:4px}
+.reader-shell .account-panel{min-width:0;padding:clamp(24px,3vw,36px);border-radius:32px;background:#f3f2ee;border:1px solid #ffffffa0}
+.reader-shell .account-panel h2{font-size:1.65rem;color:#3c537b}
+.reader-shell .account-panel dl{margin:28px 0}
+.reader-shell .account-panel dl>div{padding:14px 0;border-bottom:1px solid #dce0df}
+.reader-shell .account-panel dt{font-size:.85rem;color:#656861;margin-bottom:6px}
+.reader-shell .account-panel dd{margin:0;overflow-wrap:anywhere;line-height:1.5}
+.reader-shell .account-panel .privacy{margin:0}
+.reader-shell .account-management .secondary{font-size:1rem;min-height:48px}
+.reader-shell .account-management{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;background:#ffffffbf}
+.reader-shell .account-management-retry{grid-column:1/-1;justify-self:start}
+.reader-shell .account-management p{margin-bottom:8px}
+@media(max-width:850px){.reader-shell .account-grid{grid-template-columns:minmax(0,1fr);gap:22px}.reader-shell .home-reunion{grid-column:1;grid-row:auto;margin-top:6px}.reader-shell .home-nearby{margin-top:6px}.reader-shell .account-main{padding-top:24px}}
+@media(max-width:22rem){.reader-shell .home-shortcuts{grid-template-columns:minmax(0,1fr)}.reader-shell .home-shortcut{flex-direction:row;min-height:64px}}
+@media(max-width:360px){.reader-shell .account-main{padding-inline:16px}.reader-shell .account-panel{padding:22px}}
+@media(max-width:600px){.reader-shell .account-header{gap:12px}.reader-shell .account-header-actions{gap:6px}.reader-shell .account-icon{width:40px;height:40px}.reader-shell .account-avatar{font-size:.875rem}}
+

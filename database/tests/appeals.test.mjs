@@ -1,0 +1,78 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {test} from 'node:test';
+import {PGlite} from '@electric-sql/pglite';
+import {postgis} from '@electric-sql/pglite-postgis';
+const bundle=await readFile(new URL('../run_all.sql',import.meta.url),'utf8');
+const owner='11111111-1111-4111-8111-111111111144',other='22222222-2222-4222-8222-222222222244',reviewer='33333333-3333-4333-8333-333333333344';
+const id=n=>`cccccccc-cccc-4ccc-8ccc-${String(n).padStart(12,'0')}`;
+async function setup(t){
+ const db=await PGlite.create({extensions:{postgis}});t.after(()=>db.close());
+ await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema storage;
+ create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+ create table storage.objects(id uuid primary key,bucket_id text references storage.buckets(id),name text,metadata jsonb,unique(bucket_id,name));
+ alter table storage.objects enable row level security;grant usage on schema storage to authenticated,anon;grant select,insert,update,delete on storage.objects to authenticated;grant select on storage.objects to anon;
+ create table auth.users(id uuid primary key,aud text,role text,email text,raw_user_meta_data jsonb);
+ create function auth.uid() returns uuid language sql stable as $$select(nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
+ grant usage on schema auth to authenticated;`);
+ await db.exec(bundle);
+ await db.query('insert into auth.users(id) values($1),($2),($3)',[owner,other,reviewer]);
+ await db.query('insert into public.content_report_reviewers values($1)',[reviewer]);
+ await db.query("insert into public.pets(id,owner_id,name,species,size,age_months,traits) values($1,$2,'Luna','dog','small',12,'Blanca')",[id(1),owner]);
+ await db.query("insert into public.lost_cases(id,owner_id,pet_id,pet_version,occurred_at,latitude,longitude,place_reference,public_latitude,public_longitude,pet_name,species,size,age_months,traits,photo_ids) values($1,$2,$3,1,now(),-12,-77,'PRIVATE',-12,-77,'Luna','dog','small',12,'Blanca',array[$3]::uuid[])",[id(2),owner,id(1)]);
+ await db.query("insert into public.found_cases(id,owner_id,status,occurred_at,latitude,longitude,place_reference,public_latitude,public_longitude,species,traits,photo_ids,published_at,report_kind) values($1,$2,'active',now(),-12,-77,'PRIVATE',-12,-77,'cat','Negra',array[$3]::uuid[],now(),'possible_loss')",[id(2),owner,id(1)]);
+ await db.query("insert into public.public_sightings(id,case_source,case_id,request_hash,actor_hash,observed_at,latitude,longitude,location_source,comment,is_late,reporter_id) values($1,'lost',$2,repeat('a',64),repeat('b',64),now(),-12,-77,'manual','PRIVATE EVIDENCE',false,$3)",[id(3),id(2),other]);
+ const actor=async user=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({sub:user,role:'authenticated'})]);await db.exec('set role authenticated');};
+ const rpc=(name,params=[])=>db.query(`select public.${name}(${params.map((_,i)=>'$'+(i+1)).join(',')}) v`,params).then(r=>r.rows[0].v);
+ const decision=async(n,kind='lost',resource=id(2))=>{
+  await actor(kind==='sighting'?owner:other);await rpc('submit_content_report',[id(n),kind,resource,'PRIVATE COMPLAINT','PRIVATE EVIDENCE']);
+  await actor(reviewer);return rpc('decide_content_report',[id(n+100),id(n),0,0,'hide','Motivo de moderación']);
+ };
+ return {db,actor,rpc,decision};
+}
+test('HU14.4 ownership, private projection, retry, one answer and preserved decisions',async t=>{
+ const {db,actor,rpc,decision}=await setup(t);const original=await decision(10);
+ await actor(other);assert.deepEqual((await rpc('list_moderation_appeals')).items,[]);
+ for(const name of ['read_moderation_appeal','submit_moderation_appeal']) await assert.rejects(rpc(name,name.startsWith('read')?[id(110)]:[id(200),id(110),'Motivo']),/appeal_forbidden|moderation_forbidden/);
+ await actor(owner);const page=await rpc('list_moderation_appeals');assert.equal(page.items.length,1);assert.equal(page.items[0].appeal,null);assert.doesNotMatch(JSON.stringify(page),/PRIVATE|reporter_id|latitude|evidence|appellant_id/);
+ const submit=(command=id(200),reason='Revisar mi publicación')=>rpc('submit_moderation_appeal',[command,id(110),reason]);
+ for(const reason of ['', '\u00a0\u3000','🐾'.repeat(1001)])await assert.rejects(submit(id(200),reason),/appeal_invalid/);
+ const receipt=await submit();assert.deepEqual(await submit(),receipt);assert.deepEqual(await submit(id(200),' Revisar mi publicación '),receipt);
+ await assert.rejects(submit(id(200),'Otro motivo'),/appeal_conflict/);await assert.rejects(submit(id(201)),/appeal_conflict/);
+ await assert.rejects(rpc('answer_moderation_appeal',[id(300),id(200),'No autorizado']),/moderation_forbidden/);
+ await assert.rejects(rpc('list_moderation_appeals',[true]),/moderation_forbidden/);
+ await actor(other);await assert.rejects(rpc('read_moderation_appeal',[id(110)]),/appeal_forbidden|moderation_forbidden/);
+ await actor(reviewer);assert.equal((await rpc('list_moderation_appeals',[true])).items[0].appeal.id,id(200));
+ const answer=()=>rpc('answer_moderation_appeal',[id(300),id(200),'Revisada: se mantiene la decisión por el motivo indicado.']);
+ const answered=await answer();assert.equal(answered.appeal.answer.actor,reviewer);assert.ok(answered.appeal.answer.answeredAt);assert.deepEqual(await answer(),answered);
+ await assert.rejects(rpc('answer_moderation_appeal',[id(301),id(200),'Otra respuesta']),/appeal_conflict/);
+ await actor(owner);assert.deepEqual(await rpc('read_moderation_appeal',[id(110)]),answered);assert.deepEqual(await submit(),answered);
+ for(const table of ['moderation_appeals','moderation_appeal_answers','moderation_appeal_access'])for(const verb of ['select * from','delete from'])await assert.rejects(db.query(`${verb} public.${table}`),/permission denied/);
+ await db.exec('reset role');assert.deepEqual((await db.query('select to_jsonb(d) v from public.content_moderation_decisions d')).rows.map(r=>r.v),[original]);
+ assert.equal((await db.query('select hidden from public.content_visibility')).rows[0].hidden,true);
+ assert.ok((await db.query('select * from public.moderation_appeal_access')).rows.length>0);
+ await db.exec(bundle);await db.exec(bundle);await actor(owner);assert.deepEqual(await rpc('read_moderation_appeal',[id(110)]),answered);
+ await db.exec('reset role');await db.query('delete from public.content_report_reviewers where user_id=$1',[reviewer]);await actor(reviewer);
+ await assert.rejects(answer(),/moderation_forbidden/);await assert.rejects(rpc('list_moderation_appeals',[true]),/moderation_forbidden/);
+ await db.exec('reset role;set role anon');await assert.rejects(rpc('read_moderation_appeal',[id(110)]),/permission denied/);
+});
+test('HU14.4 found ownership and sighting authorship exclude the case owner and anonymous evidence',async t=>{
+ const {db,actor,rpc,decision}=await setup(t);
+ await decision(10,'found');await decision(20,'sighting',id(3));
+ await actor(owner);await rpc('submit_moderation_appeal',[id(200),id(110),'Revisar mi aviso']);
+ await assert.rejects(rpc('submit_moderation_appeal',[id(201),id(120),'El caso es mío, pero el avistamiento no']),/appeal_forbidden/);
+ await actor(other);const sighting=await rpc('submit_moderation_appeal',[id(201),id(120),'Este avistamiento es mío']);assert.equal(sighting.kind,'sighting');
+ await assert.rejects(rpc('submit_moderation_appeal',[id(200),id(120),'Reutilizar otro comando']),/appeal_conflict/);
+ await db.exec('reset role');await db.query('update public.public_sightings set reporter_id=null where id=$1',[id(3)]);await actor(other);
+ await assert.rejects(rpc('read_moderation_appeal',[id(120)]),/moderation_forbidden/);
+});
+test('HU14.4 own decisions paginate across history without exposing other owners',async t=>{
+ const {db,actor,rpc,decision}=await setup(t);await decision(10);
+ await db.exec('reset role');
+ for(let n=1;n<=24;n++)await db.query("insert into public.content_moderation_decisions(command_id,report_id,actor_id,action,reason,report_version,resource_version,hidden) values($1,$2,$3,'dismiss','Revisión histórica',$4,$4,true)",[id(400+n),id(10),reviewer,n+1]);
+ await actor(owner);const first=await rpc('list_moderation_appeals');assert.equal(first.items.length,20);assert.ok(first.next);
+ const rest=await rpc('list_moderation_appeals',[false,first.next.time,first.next.id]);assert.equal(rest.items.length,5);assert.equal(rest.next,null);
+ assert.equal(new Set([...first.items,...rest.items].map(i=>i.decision)).size,25);
+ await assert.rejects(rpc('list_moderation_appeals',[false,first.next.time,null]),/appeal_invalid/);
+ await actor(other);assert.equal((await rpc('list_moderation_appeals')).items.length,0);
+});

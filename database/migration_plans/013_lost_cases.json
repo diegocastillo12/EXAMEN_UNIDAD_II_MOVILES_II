@@ -1,0 +1,11 @@
+{
+  "version": "20261010001300",
+  "name": "lost_cases",
+  "traceability": "HU-05 / RF-05 / issue #5: authorized idempotent lost-pet publication and safe public projection",
+  "sources": [
+    "tables/048_lost_cases.sql",
+    "functions/049_lost_case_commands.sql",
+    "policies/050_lost_case_policies.sql",
+    "grants/051_lost_case_permissions.sql"
+  ]
+}

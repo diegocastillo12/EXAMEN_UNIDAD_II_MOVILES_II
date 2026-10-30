@@ -1,0 +1,11 @@
+{
+  "version": "20261010001200",
+  "name": "pet_photo_processing",
+  "traceability": "HU-04.1 / issue #30 and HU-04.2 / issue #31 / RF-03: trusted private renditions and primary photo",
+  "sources": [
+    "tables/044_pet_photo_processing.sql",
+    "functions/045_pet_photo_processing_commands.sql",
+    "policies/046_pet_photo_processing_policies.sql",
+    "grants/047_pet_photo_processing_permissions.sql"
+  ]
+}

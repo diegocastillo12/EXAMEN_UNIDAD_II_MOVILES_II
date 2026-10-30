@@ -1,0 +1,6 @@
+{
+  "version": "20261023003800",
+  "name": "recovery_nested_business_conflicts",
+  "traceability": "HU-15.2 / RF-32 / issue #48: complete037 for internal publish_found_case delegation; preserves settings and grants.",
+  "sources": ["functions/124_recovery_nested_business_conflicts.sql"]
+}

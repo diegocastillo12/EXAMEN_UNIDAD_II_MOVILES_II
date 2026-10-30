@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {test} from 'node:test';
+import {userBlocksFixture,blockResource,blockId} from './user_blocks_fixture.mjs';
+import {ordinary,moderator} from './moderation_fixture.mjs';
+test('HU14.2 production APIs require session/onboarding, identity, origin and own relationship; replay and repeated reads preserve committed choice',async t=>{
+ const s=await userBlocksFixture();t.after(s.close);
+ assert.equal((await fetch(s.origin+'/api/user-blocks/list')).status,401);
+ const protectedPage=await fetch(s.origin+'/cuentas-bloqueadas',{redirect:'manual'});assert.equal(protectedPage.status,302);assert.match(protectedPage.headers.get('location'),/api\/access\/entry/);assert.doesNotMatch(await protectedPage.text(),/Reportante de Luna/);
+ const login=async email=>{const r=await fetch(s.origin+'/api/access/login',{method:'POST',headers:{Origin:s.origin,'Content-Type':'application/json'},body:JSON.stringify({email,password:'test-fixture-password'})});assert.equal(r.status,200);return r.headers.getSetCookie().find(v=>v.startsWith('eh_access=')&&!v.startsWith('eh_access=;')).split(';')[0];};
+ const cookie=await login('ordinario@example.test'),headers={Cookie:cookie,'X-Account-Actor':ordinary};
+ const post=(path,body,extra={})=>fetch(s.origin+'/api/user-blocks/'+path,{method:'POST',headers:{...headers,Origin:s.origin,'Content-Type':'application/json',...extra},body:JSON.stringify(body)});
+ assert.equal((await post('prepare',{kind:'lost',id:blockResource},{Origin:'https://untrusted.test'})).status,403);
+ assert.equal((await fetch(s.origin+'/api/user-blocks/list',{headers:{...headers,'X-Account-Actor':moderator}})).status,409);
+ assert.equal((await fetch(s.origin+'/api/user-blocks/list?before=bad',{headers})).status,422);
+ const prepared=await post('prepare',{kind:'lost',id:blockResource});assert.equal(prepared.status,200);const {entry}=await prepared.json();assert.equal(JSON.stringify(entry).includes('PRIVATE'),false);
+ const input={id:entry.id,enabled:true,version:entry.version};s.ambiguousBlock();assert.equal((await post('set',input)).status,503);assert.equal(s.writes(),1);assert.equal((await post('set',input)).status,200);assert.equal(s.writes(),1);
+ const page=await (await fetch(s.origin+'/api/user-blocks/list',{headers})).json();assert.equal(page.items[0].id,blockId);assert.equal(JSON.stringify(page).includes('PRIVATE'),false);
+ const other=await login('moderador@example.test');assert.equal((await post('set',{id:entry.id,enabled:false,version:1},{Cookie:other,'X-Account-Actor':moderator})).status,403);
+ assert.equal((await post('set',{id:entry.id,enabled:false,version:1})).status,200);assert.equal((await post('set',input)).status,409);
+ const reloaded=await (await fetch(s.origin+'/api/user-blocks/list',{headers})).json();assert.deepEqual(reloaded.items,[]);
+ assert.equal((await post('set',{id:entry.id,enabled:true,version:'2'})).status,422);
+ assert.equal((await post('set',{id:entry.id,enabled:true,version:2,padding:'x'.repeat(9000)})).status,422);
+ s.failList(true);const failed=await fetch(s.origin+'/api/user-blocks/list',{headers});assert.equal(failed.status,503);assert.deepEqual(await failed.json(),{error:'unavailable'});s.failList(false);
+ s.setOnboarding(ordinary,false);assert.equal((await fetch(s.origin+'/api/user-blocks/list',{headers})).status,403);
+});

@@ -1,0 +1,5 @@
+{
+  "version": "20261007000200",
+  "name": "onboarding_completion",
+  "sources": ["tables/008_add_onboarding_completion.sql", "functions/009_complete_onboarding.sql"]
+}

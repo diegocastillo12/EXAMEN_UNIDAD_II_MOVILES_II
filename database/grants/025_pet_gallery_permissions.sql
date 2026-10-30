@@ -1,0 +1,10 @@
+revoke all on public.pet_photos from public,anon,authenticated;
+grant select on public.pet_photos to authenticated;
+revoke all on function public.create_pet(uuid,text,text,text,integer,text) from public,anon,authenticated;
+revoke all on function public.update_pet(uuid,integer,text,text,text,integer,text) from public,anon,authenticated;
+revoke all on function public.create_pet_v2(uuid,text,text,text,integer,text,text,text) from public,anon,authenticated;
+revoke all on function public.update_pet_v2(uuid,integer,text,text,text,integer,text,text,text) from public,anon,authenticated;
+grant execute on function public.create_pet_v2(uuid,text,text,text,integer,text,text,text) to authenticated;
+grant execute on function public.update_pet_v2(uuid,integer,text,text,text,integer,text,text,text) to authenticated;
+revoke all on function public.reserve_pet_photo(uuid,uuid), public.publish_pet_photo(uuid), public.remove_pet_photo(uuid), public.owns_pet_photo_path(text) from public,anon,authenticated;
+grant execute on function public.reserve_pet_photo(uuid,uuid), public.publish_pet_photo(uuid), public.remove_pet_photo(uuid), public.owns_pet_photo_path(text) to authenticated;

@@ -1,0 +1,72 @@
+-- HU-07.1 / RF-13. Bounded keyset pagination over the existing visibility contracts.
+create or replace function public.explore_cases(
+ p_kind text default 'all', p_species text default 'all', p_status text default 'active',
+ p_since timestamptz default null, p_until timestamptz default null,
+ p_latitude double precision default null, p_longitude double precision default null,
+ p_radius_meters integer default null, p_cursor jsonb default null, p_limit integer default 20
+) returns jsonb language plpgsql stable security definer set search_path='' set statement_timeout='8s' as $$
+declare
+ v_query jsonb; v_as_of timestamptz; v_after timestamptz; v_source text; v_id uuid;
+ v_point extensions.geography; v_rows jsonb; v_items jsonb; v_last jsonb; v_next jsonb;
+begin
+ if auth.uid() is null then raise exception using errcode='42501',message='explore_unauthorized'; end if;
+ if p_kind is null or p_kind not in ('all','lost','found','sighting') or p_species is null or p_species not in ('all','dog','cat','other')
+ or p_status is null or p_status not in ('all','active','resolved') or p_limit is null or p_limit not between 1 and 50
+ or (p_since is not null and not isfinite(p_since)) or (p_until is not null and not isfinite(p_until))
+ or (p_since is not null and p_until is not null and p_since>p_until)
+ or (num_nonnulls(p_latitude,p_longitude,p_radius_meters) not in (0,3))
+ or (p_latitude is not null and not(p_latitude between -85 and 85))
+ or (p_longitude is not null and not(p_longitude between -180 and 180))
+ or (p_radius_meters is not null and p_radius_meters not between 100 and 50000)
+ then raise exception using errcode='22023',message='explore_invalid'; end if;
+ v_query=jsonb_build_array(p_kind,p_species,p_status,p_since,p_until,p_latitude,p_longitude,p_radius_meters);
+ v_as_of=statement_timestamp();
+ if p_cursor is not null then
+  begin
+   if jsonb_typeof(p_cursor)<>'object' or (p_cursor->'query') is distinct from v_query
+    or not(p_cursor ?& array['as_of','published_at','source','id']) then raise exception 'invalid'; end if;
+   v_as_of=(p_cursor->>'as_of')::timestamptz;
+   v_after=(p_cursor->>'published_at')::timestamptz; v_source=p_cursor->>'source'; v_id=(p_cursor->>'id')::uuid;
+   if v_as_of is null or not isfinite(v_as_of) or v_as_of>statement_timestamp() or v_after is null or not isfinite(v_after)
+    or v_after>v_as_of or v_source is null or v_source not in ('lost','found') or v_id is null then raise exception 'invalid'; end if;
+  exception when others then raise exception using errcode='22023',message='explore_cursor_invalid'; end;
+ end if;
+ if p_latitude is not null then
+  v_point=extensions.st_setsrid(extensions.st_makepoint(p_longitude,p_latitude),4326)::extensions.geography;
+ end if;
+ with candidates as (
+  select c.id,'lost'::text as source,c.created_at as published_at,'lost'::text as kind,c.species,c.occurred_at,
+   c.public_latitude as latitude,c.public_longitude as longitude
+  from public.lost_cases c where c.deleted_at is null and c.created_at<=v_as_of
+   and (c.status='active' or (c.status='resolved' and c.owner_id=auth.uid()))
+   and (v_point is null or extensions.st_dwithin(extensions.st_setsrid(extensions.st_makepoint(c.public_longitude,c.public_latitude),4326)::extensions.geography,v_point,p_radius_meters))
+  union all
+  select c.id,'found',c.published_at,case when c.report_kind='possible_loss' then 'lost' when c.report_kind='sighting' then 'sighting' else 'found' end,
+   c.species,c.occurred_at,c.public_latitude,c.public_longitude
+  from public.found_cases c where c.deleted_at is null and c.published_at<=v_as_of
+   and (c.status='active' or (c.status='resolved' and c.owner_id=auth.uid()))
+   and (v_point is null or extensions.st_dwithin(extensions.st_setsrid(extensions.st_makepoint(c.public_longitude,c.public_latitude),4326)::extensions.geography,v_point,p_radius_meters))
+ ), visible as (
+  select c.*,r.data from candidates c cross join lateral (
+   select x as data from public.read_recovery_pet_case(c.id) x where c.source='lost'
+   union all select x from public.read_recovery_report(c.id) x where c.source='found'
+  ) r
+  where (p_kind='all' or c.kind=p_kind) and (p_species='all' or c.species=p_species)
+   and (p_status='all' or r.data->>'status'=p_status)
+   and (p_since is null or c.occurred_at>=p_since) and (p_until is null or c.occurred_at<=p_until)
+   and (v_after is null or (c.published_at,c.source,c.id)<(v_after,v_source,v_id))
+  order by c.published_at desc,c.source desc,c.id desc limit p_limit+1
+ ) select coalesce(jsonb_agg(jsonb_build_object(
+  'id',id,'source',source,'published_at',published_at,'kind',kind,'status',data->>'status',
+  'report_kind',coalesce(data->>'report_kind','own_loss'),'name',coalesce(data->>'pet_name',''),'species',species,'species_detail',data->>'species_detail',
+  'traits',data->>'traits','occurred_at',occurred_at,'latitude',latitude,'longitude',longitude,
+  'distance_meters',case when v_point is null then null else round(extensions.st_distance(
+   extensions.st_setsrid(extensions.st_makepoint(longitude,latitude),4326)::extensions.geography,v_point)) end,
+  'cover_path',data->'photos'->0->>'path') order by published_at desc,source desc,id desc),'[]'::jsonb) into v_rows from visible;
+ select coalesce(jsonb_agg(value order by ordinality),'[]'::jsonb) into v_items from jsonb_array_elements(v_rows) with ordinality where ordinality<=p_limit;
+ if jsonb_array_length(v_rows)>p_limit then
+  v_last=v_items->(p_limit-1);
+  v_next=jsonb_build_object('as_of',v_as_of,'published_at',v_last->'published_at','source',v_last->>'source','id',v_last->>'id','query',v_query);
+ end if;
+ return jsonb_build_object('items',v_items,'next_cursor',v_next);
+end; $$;

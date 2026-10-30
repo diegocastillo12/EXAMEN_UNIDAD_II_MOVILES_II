@@ -1,0 +1,5 @@
+{
+  "version": "20261008000500",
+  "name": "pets",
+  "sources": ["functions/013_pet_text_rules.sql", "tables/014_create_pets.sql", "indexes/015_pets_owner_created.sql", "functions/016_pet_commands.sql", "policies/017_pets_owner_policies.sql", "grants/018_pets_permissions.sql"]
+}

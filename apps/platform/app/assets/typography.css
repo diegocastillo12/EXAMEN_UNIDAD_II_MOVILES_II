@@ -1,0 +1,34 @@
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/poppins/Poppins-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/poppins/Poppins-SemiBold.ttf') format('truetype');
+}
+
+:root {
+  --primary-title-family: 'Poppins', sans-serif;
+  --primary-title-size: 2rem;
+  --primary-title-weight: 400;
+  --primary-title-color: #454746;
+  --primary-title-line-height: 1.25;
+}
+
+/* Page/step headings. The approved landing hero preserves its own typography (ADR-120). */
+:is(.reader-shell, .landing-page) h1:not(#hero-title) {
+  font-family: var(--primary-title-family);
+  font-size: var(--primary-title-size);
+  font-weight: var(--primary-title-weight);
+  color: var(--primary-title-color);
+  line-height: var(--primary-title-line-height);
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}

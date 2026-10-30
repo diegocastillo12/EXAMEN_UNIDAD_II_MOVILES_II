@@ -1,0 +1,6 @@
+{
+ "version":"20261018002900",
+ "name":"content_reports",
+ "traceability":"HU-14.1 / RF-22 / issue #43. Requires028; private idempotent reporting, no automatic moderation.",
+ "sources":["tables/099_content_reports.sql","functions/100_content_report_commands.sql","grants/101_content_report_permissions.sql"]
+}

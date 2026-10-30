@@ -1,0 +1,13 @@
+{
+  "version": "20261007000100",
+  "name": "auth_profiles",
+  "sources": [
+    "tables/001_create_profiles.sql",
+    "functions/002_handle_new_auth_user.sql",
+    "functions/003_set_profile_updated_at.sql",
+    "triggers/004_profiles_auth_triggers.sql",
+    "policies/005_profiles_owner_policies.sql",
+    "grants/006_profiles_permissions.sql",
+    "tables/007_backfill_existing_profiles.sql"
+  ]
+}

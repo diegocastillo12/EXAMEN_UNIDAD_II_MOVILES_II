@@ -1,0 +1,5 @@
+# Copy to key.properties (ignored). Use forward slashes in an absolute path.
+storeFile=C:/ruta/segura/entrehuellas-release.jks
+storePassword=REEMPLAZAR
+keyAlias=entrehuellas
+keyPassword=REEMPLAZAR

@@ -1,0 +1,6 @@
+{
+  "version": "20261020003100",
+  "name": "case_contacts",
+  "traceability": "Ampliación explícita20/10 de HU-05/06/07: contacto por caso con consentimiento. Requiere030. Sin contacto anónimo/QR ni cierre de historias.",
+  "sources": ["tables/106_case_contacts.sql", "functions/107_case_contact_commands.sql", "policies/108_case_contact_avatar.sql", "grants/109_case_contact_permissions.sql"]
+}

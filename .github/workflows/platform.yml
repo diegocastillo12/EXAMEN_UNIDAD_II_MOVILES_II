@@ -1,0 +1,51 @@
+name: Web platform validation
+on:
+  push:
+    paths: ['apps/platform/**', '.github/workflows/platform.yml']
+  pull_request:
+    paths: ['apps/platform/**', '.github/workflows/platform.yml']
+permissions:
+  contents: read
+jobs:
+  reader:
+    runs-on: ubuntu-latest
+    env:
+      ONNXRUNTIME_NODE_INSTALL_CUDA: skip
+    defaults:
+      run:
+        working-directory: apps/platform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/platform/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Verify packaged native image libraries
+        run: node scripts/check-native-images.mjs
+      - run: npm run test:server
+      - name: Build production container
+        run: docker build --tag entrehuellas-public-web:ci .
+      - name: Smoke test container without production secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'docker rm -f public-web-ci >/dev/null 2>&1 || true' EXIT
+          docker run --detach --name public-web-ci \
+            --env SUPABASE_URL=https://example.invalid \
+            --env SUPABASE_SERVER_KEY=sb_secret_ci-placeholder-only \
+            entrehuellas-public-web:ci
+          for attempt in {1..15}; do
+            if docker exec public-web-ci node scripts/healthcheck.mjs; then
+              test "$(docker exec public-web-ci id -u)" != "0"
+              docker exec public-web-ci sh -c 'test ! -e /app/.env && test ! -d /app/tests && test ! -d /app/server'
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs public-web-ci
+          exit 1

@@ -1,0 +1,5 @@
+{
+ "version":"20261016002200","name":"case_posters",
+ "traceability":"HU-08.1/#34 and HU-08.2/#35, RF-08,37; owner-only stable opaque poster links; public reader remains HU-09",
+ "sources":["tables/077_case_public_links.sql","functions/078_prepare_case_poster.sql","grants/079_case_poster_permissions.sql"]
+}

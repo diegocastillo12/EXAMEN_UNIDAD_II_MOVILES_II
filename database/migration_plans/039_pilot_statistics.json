@@ -1,0 +1,6 @@
+{
+  "version": "20261024003900",
+  "name": "pilot_statistics",
+  "traceability": "HU-16.1 / RF-35 / issue #50: private aggregate pilot statistics and independent administrator permission",
+  "sources": ["tables/125_platform_administrators.sql", "functions/126_pilot_statistics.sql", "grants/127_pilot_statistics_permissions.sql"]
+}

@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Entre Huellas - desarrollo local",
+      "templateFor": "apps/mobile/lib",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/mobile",
+      "program": "lib/main.dart",
+      "toolArgs": ["--dart-define-from-file=config/supabase.local.json"]
+    },
+    {
+      "name": "Entre Huellas - sin Supabase",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/mobile",
+      "program": "lib/main.dart"
+    }
+  ]
+}

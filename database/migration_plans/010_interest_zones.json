@@ -1,0 +1,11 @@
+{
+  "version": "20261009001000",
+  "name": "interest_zones",
+  "traceability": "HU-02.1 / RF-02,16 / issue #26: private manual zones with versioned retryable commands",
+  "sources": [
+    "tables/036_create_interest_zones.sql",
+    "functions/037_interest_zone_commands.sql",
+    "policies/038_interest_zone_owner_policies.sql",
+    "grants/039_interest_zone_permissions.sql"
+  ]
+}

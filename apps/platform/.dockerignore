@@ -1,0 +1,21 @@
+# Only these inputs enter the Docker build context. No .env, fixtures or modules.
+**
+!Dockerfile
+!.dockerignore
+!package.json
+!package-lock.json
+!nuxt.config.ts
+!tsconfig.json
+!scripts/
+!scripts/healthcheck.mjs
+!scripts/prepare-match-model.mjs
+!scripts/check-native-images.mjs
+!scripts/package-native-images.mjs
+!app/
+!app/**
+!shared/
+!shared/**
+!server/
+!server/**
+!public/
+!public/**

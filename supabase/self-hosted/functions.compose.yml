@@ -1,0 +1,17 @@
+# Insertar dentro de services, antes de volumes del Compose de Dokploy.
+  functions:
+    image: supabase/edge-runtime:v1.76.2
+    restart: unless-stopped
+    depends_on:
+      kong:
+        condition: service_healthy
+    volumes:
+      - ../files/volumes/functions:/home/deno/functions:ro,z
+      - functions-deno-cache:/root/.cache/deno
+    environment:
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+    command: ["start", "--main-service", "/home/deno/functions/main"]
+
+# Añadir functions-deno-cache: dentro del bloque volumes existente.

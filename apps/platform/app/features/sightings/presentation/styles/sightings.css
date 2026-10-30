@@ -1,0 +1,18 @@
+.reader-shell .sighting-screen { max-width: 620px; margin: auto; padding-top: 64px; }
+.reader-shell .sighting-back { position: fixed; top: max(16px, env(safe-area-inset-top)); left: max(16px, calc((100vw - 960px) / 2 + 24px)); z-index: 5; box-shadow: 0 4px 20px #0001; }
+.reader-shell .sighting-form { display: grid; gap: 28px; }
+.reader-shell .sighting-form fieldset { padding: 0; margin: 0; border: 0; min-width: 0; display: grid; gap: 14px; }
+.reader-shell .sighting-form legend { font-size: 1.3rem; font-weight: 650; margin-bottom: 16px; }
+.reader-shell .sighting-form label { display: flex; flex-direction: column; gap: 8px; font-weight: 600; position: relative; min-width: 0; }
+.reader-shell .sighting-form input:not([type=file]), .reader-shell .sighting-form textarea { box-sizing: border-box; width: 100%; min-width: 0; min-height: 60px; border: 1px solid #b5d5e9; border-radius: 24px; padding: 18px; background: #fff; color: #171918; font: inherit; font-weight: 400; }
+.reader-shell .sighting-form textarea { resize: vertical; padding-bottom: 36px; }
+.reader-shell .sighting-date-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px; }
+.reader-shell .field-count { position: absolute; right: 18px; bottom: 12px; font-size: .75rem; font-weight: 400; color: #6e6e73; }
+.reader-shell .sighting-form .privacy { margin: 0; }
+.reader-shell .photo-choice { cursor: pointer; overflow-wrap: anywhere; display: block; }
+.reader-shell .photo-choice input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); border: 0; }
+.reader-shell .photo-choice:focus-within { outline: 3px solid #2c87ce; outline-offset: 5px; }
+.reader-shell .invalid input, .reader-shell .invalid textarea { border-color: #c53434; }
+.reader-shell .shake { animation: field-shake 320ms ease-in-out; }
+.reader-shell .sighting-confirmation { display: grid; gap: 16px; }
+@keyframes field-shake { 20%,60% { transform: translateX(-5px); } 40%,80% { transform: translateX(5px); } }

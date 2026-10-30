@@ -1,0 +1,12 @@
+{
+  "name": "entrehuellas-database-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 migration_catalog.test.mjs run_all.test.mjs notifications.test.mjs case_closure.test.mjs content_reports.test.mjs moderation.test.mjs case_contacts.test.mjs case_sharing.test.mjs user_blocks.test.mjs appeals.test.mjs pilot_statistics.test.mjs case_matching.test.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.10",
+    "@electric-sql/pglite-postgis": "0.2.10"
+  }
+}

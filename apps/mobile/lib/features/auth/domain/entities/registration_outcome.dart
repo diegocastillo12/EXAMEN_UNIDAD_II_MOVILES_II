@@ -1,0 +1,1 @@
+enum RegistrationOutcome { confirmationRequired, authenticated }

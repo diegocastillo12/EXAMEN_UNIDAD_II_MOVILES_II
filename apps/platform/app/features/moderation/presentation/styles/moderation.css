@@ -1,0 +1,34 @@
+.reader-shell .moderation-screen{max-width:1440px;width:calc(100% - clamp(24px,4vw,64px));padding:28px 0 60px}
+.reader-shell .moderation-header{display:flex;align-items:start;justify-content:space-between;flex-wrap:wrap;gap:20px;margin-bottom:28px}
+.reader-shell .moderation-header h1{margin-bottom:0}
+.reader-shell .moderation-panel{min-width:0;background:#fff;border:1px solid #e4e9e8;border-radius:clamp(23px,3.2vw,36px);padding:clamp(20px,3vw,32px)}
+.reader-shell .moderation-login{max-width:560px}.reader-shell .moderation-login,.reader-shell .moderation-decision form{display:grid;gap:22px}
+.reader-shell .moderation-screen label{display:flex;flex-direction:column;gap:10px;color:#171918;line-height:1.5;position:relative}
+.reader-shell .moderation-screen input,.reader-shell .moderation-screen textarea,.reader-shell .moderation-screen select{font:inherit;font-size:1rem;width:100%;min-height:60px;padding:18px 16px;border:1px solid #c8d1d5;border-radius:22px;background:#f9fbfc;color:#171918}
+.reader-shell .moderation-screen textarea{resize:vertical;padding-bottom:40px}
+.reader-shell .moderation-screen .field-count{position:absolute;bottom:12px;right:16px;color:#656861;font-size:.85rem;pointer-events:none}
+.reader-shell .moderation-screen .invalid input,.reader-shell .moderation-screen .invalid textarea{border:2px solid #b42318}
+.reader-shell .moderation-screen .shake{animation:moderation-shake .28s ease-in-out}
+.reader-shell .moderation-screen button:disabled{opacity:.65}
+.reader-shell .moderation-tools{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:24px}
+.reader-shell .moderation-tabs{display:flex;flex-wrap:wrap;gap:10px}
+.reader-shell .moderation-tabs [aria-pressed=true]{box-shadow:inset 0 0 0 2px #3c537b}
+.reader-shell .moderation-list{list-style:none;padding:0;margin:0 0 24px;display:grid;gap:18px}
+.reader-shell .moderation-list li{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+.reader-shell .moderation-list li>div{min-width:0}.reader-shell .moderation-list h2{margin-top:14px}
+.reader-shell .moderation-detail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:24px}
+.reader-shell .moderation-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.reader-shell .moderation-reference{overflow-wrap:anywhere}.reader-shell .moderation-photo{display:block;max-width:100%;max-height:560px;object-fit:contain;border-radius:22px;margin-top:20px}
+.reader-shell .moderation-history{list-style:none;padding:0;margin:0}.reader-shell .moderation-history li+li{border-top:1px solid #e4e9e8;padding-top:20px;margin-top:20px}
+.reader-shell .moderation-screen h3{font-size:1.1rem;font-weight:600;line-height:1.4}
+@keyframes moderation-shake{25%,75%{transform:translateX(-4px)}50%{transform:translateX(4px)}}
+@media(max-width:850px){.reader-shell .moderation-detail{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.reader-shell .moderation-screen{width:calc(100% - 28px)}.reader-shell .moderation-screen .primary,.reader-shell .moderation-screen .secondary{max-width:100%;min-height:48px;font-size:1rem}.reader-shell .moderation-header{display:block}.reader-shell .moderation-header>button{margin-top:20px}}
+@media(prefers-reduced-motion:reduce){.reader-shell .moderation-screen .shake{animation:none}}
+
+.reader-shell .moderation-options{border:0;margin:0;padding:0;min-width:0;display:grid;gap:10px}
+.reader-shell .moderation-options legend{padding:0;margin-bottom:10px;line-height:1.5}
+.reader-shell .moderation-screen .moderation-option{display:flex;flex-direction:row;align-items:center;gap:12px;min-height:60px;border:1px solid #c8d1d5;border-radius:22px;padding:14px 16px;cursor:pointer}
+.reader-shell .moderation-screen .moderation-option.selected{background:#edf5fa;border-color:#3c537b}
+.reader-shell .moderation-screen .moderation-option input{width:24px;height:24px;min-height:24px;flex:0 0 24px;padding:0;margin:0;accent-color:#3c537b}
+.reader-shell .moderation-option span{min-width:0;overflow-wrap:anywhere}

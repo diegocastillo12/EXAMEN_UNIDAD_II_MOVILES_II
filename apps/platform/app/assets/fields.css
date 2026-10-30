@@ -1,0 +1,104 @@
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url('/fonts/inter-latin.woff2') format('woff2')}
+/* Sader component skin, kept local to the shared controls. Source: sader-panel
+   globals.css, field-select, md-outlined-text-field, month-calendar, time-field. */
+.sader-field,.sader-popover-layer,.sader-top-loader{
+  /* Sader's semantic color roles, mapped to Entre Huellas' sky-blue palette.
+     Local scope keeps landing, brand, headings and existing access skins intact. */
+  --sf-foreground:#171918;
+  --sf-muted:#526880;
+  --sf-border:#b5cde4;
+  --sf-outline:#8fa9c4;
+  --sf-ring:#2c87ce;
+  --sf-danger:#b53f48;
+  --sf-surface:#f5f9ff;
+  --sf-accent:#edf5fa;
+  --sf-hover:#e5f2fa;
+  --sf-primary:#236da9;
+  --sf-progress:#2887ef;
+  --sf-selected:#d6e8ff;
+  --sf-on-selected:#244c75;
+  --sf-disabled:rgb(82 104 128 / .4);
+  --sf-shadow:#3c537b33;
+  font-family:Inter,Arial,sans-serif;color:var(--sf-foreground);font-size:1rem;font-weight:400;line-height:1.5
+}
+.sader-field,.sader-popover-layer *{box-sizing:border-box}
+.sader-field{min-width:0;display:flex;flex-direction:column;gap:6px}
+.reader-shell .sader-field .sader-field-label{display:block;padding:0 4px;font:500 .75rem/1.5 Inter,Arial,sans-serif;color:var(--sf-muted)}
+.sader-popover-anchor{min-width:0}
+.reader-shell .sader-field .sader-control{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-width:0;min-height:48px;padding:10px 12px;border:1px solid var(--sf-border);border-radius:calc(.625rem - 2px);background:transparent;color:var(--sf-foreground);font:400 .875rem/1.5 Inter,Arial,sans-serif;outline:none;transition:border-color .15s,box-shadow .15s;text-align:left;cursor:pointer}
+.sader-control>span{min-width:0;overflow-wrap:anywhere}
+.sader-field-icon{width:16px;height:16px;flex-shrink:0;color:var(--sf-muted)}
+.sader-placeholder{color:var(--sf-muted)}
+.reader-shell .sader-field .sader-control:hover{border-color:var(--sf-outline)}
+.reader-shell .sader-field .sader-control:focus-visible{outline:none;border-color:transparent;box-shadow:inset 0 0 0 3px var(--sf-ring)}
+.reader-shell .sader-field .sader-control:disabled,.reader-shell .sader-field .sader-text-input:disabled{pointer-events:none;cursor:not-allowed;opacity:.5}
+.reader-shell .sader-invalid .sader-control{border-color:transparent;box-shadow:inset 0 0 0 3px var(--sf-danger);animation:sader-field-shake .4s ease-in-out}
+.reader-shell .sader-invalid .sader-field-label,.sader-invalid .sader-control,.sader-invalid .sader-control .sader-field-icon{color:var(--sf-danger)}
+.sader-popover-layer{position:fixed;inset:0;margin:0;width:100%;height:100%;max-width:none;max-height:none;border:0;padding:0;background:transparent;pointer-events:none}
+.sader-popover-layer::backdrop{background:transparent;pointer-events:none}
+.sader-morph-panel{position:fixed;box-sizing:border-box;pointer-events:auto;overflow:hidden;background:var(--sf-surface);border:1px solid var(--sf-border);border-radius:32px;box-shadow:0 25px 50px -12px var(--sf-shadow);outline:none;transform-origin:center}
+.sader-morph-content{position:relative;display:flex;flex-direction:column;gap:4px;height:100%;padding:8px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.sader-morph-content::-webkit-scrollbar,.sader-time-scroll::-webkit-scrollbar{display:none}
+.sader-morph-content>*{flex-shrink:0}
+.sader-select-options{display:flex;flex-direction:column;gap:4px;outline:none}
+.sader-option{display:flex;align-items:center;min-height:48px;padding:12px 16px;border-radius:24px;color:var(--sf-muted);font:500 .875rem/1.5 Inter,Arial,sans-serif;cursor:pointer;transition:background .15s,color .15s;overflow-wrap:anywhere;scroll-margin-top:56px}
+.sader-option:hover,.sader-option.active,.sader-time-option:hover{background:var(--sf-hover);color:var(--sf-primary)}
+.sader-option.selected{background:var(--sf-selected);color:var(--sf-on-selected);border-radius:16px}
+.sader-option.selected:first-child,.sader-option.selected:last-child{border-radius:24px}
+.sader-search{position:sticky;top:-8px;z-index:1;display:flex;align-items:center;gap:10px;margin:-8px -8px 4px;padding:14px 24px;border-bottom:1px solid var(--sf-border);background:var(--sf-surface)}
+.reader-shell .sader-morph-panel .sader-search input{min-height:0;width:100%;min-width:0;margin:0;border:0;border-radius:0;padding:0;background:transparent;font:400 .875rem/1.5 Inter,Arial,sans-serif;color:var(--sf-foreground);outline:none;box-shadow:none}
+.sader-no-results{padding:32px 16px;text-align:center;font-size:.875rem;color:var(--sf-muted)}
+.sader-text-shell{position:relative;min-width:0}
+.sader-text-field{gap:0}
+.sader-label-space{display:none;max-width:calc(100% - 24px);margin:0 0 -1.125rem 8px;padding:0 4px;visibility:hidden;pointer-events:none;font:600 .75rem/1.5 Inter,Arial,sans-serif;overflow-wrap:anywhere}
+.sader-text-field:not(.sader-inset):has(.sader-text-input:is(:focus,:not(:placeholder-shown)))>.sader-label-space{display:block}
+/* Draw the notch in the outline itself. An opaque label patch cannot match
+   the moving glow/gradient behind a transparent field. */
+.reader-shell .sader-text-field .sader-text-outline{position:absolute;inset:-.5625rem 0 0;display:block;min-width:0;margin:0;padding:0 8px;border:1px solid var(--sf-border);border-radius:calc(.625rem - 2px);pointer-events:none;transition:border-color .2s,border-width .2s}
+.reader-shell .sader-text-field .sader-text-outline legend{display:block;float:none;width:auto;max-width:.01px;height:1.125rem;margin:0;padding:0;overflow:hidden;visibility:hidden;font:600 .75rem/1.5 Inter,Arial,sans-serif;white-space:nowrap;transition:max-width .15s}
+.sader-text-outline legend span{display:inline-block;padding:0 4px}
+.reader-shell .sader-text-field .sader-text-input:is(:focus,:not(:placeholder-shown))~.sader-text-outline legend{max-width:100%}
+.reader-shell .sader-text-field .sader-text-input:hover~.sader-text-outline{border-color:var(--sf-outline)}
+.reader-shell .sader-text-field .sader-text-input:focus~.sader-text-outline{border-color:var(--sf-ring);border-width:3px}
+.reader-shell .sader-invalid .sader-text-input:not(:focus)~.sader-text-outline{border-color:var(--sf-danger);border-width:3px}
+.reader-shell .sader-invalid .sader-text-shell:not(:focus-within){animation:sader-field-shake .4s ease-in-out}
+.reader-shell .sader-text-input:disabled~.sader-text-outline{opacity:.5}
+.reader-shell .sader-inset .sader-text-outline{border-radius:calc(.625rem + 4px)}
+.reader-shell .sader-inset .sader-text-input:is(:focus,:not(:placeholder-shown))~.sader-text-outline legend{max-width:.01px}
+.reader-shell .sader-text-field .sader-text-input{box-sizing:border-box;display:block;width:100%;min-width:0;min-height:3rem;border:1px solid transparent;border-radius:calc(.625rem - 2px);padding:.75rem;background:transparent;font:400 .875rem/1.5 Inter,Arial,sans-serif;color:var(--sf-foreground);outline:none;box-shadow:none;transition:all .2s}
+.reader-shell .sader-text-field .sader-text-input:hover{border-color:transparent;box-shadow:none;background-image:none}
+.reader-shell .sader-text-field .sader-text-input:focus{border-color:transparent;box-shadow:none;outline:none}
+.reader-shell .sader-text-field .sader-floating-label{position:absolute;display:block;left:8px;top:1.5rem;transform:translateY(-50%);padding:0 4px;background:transparent;font:400 .875rem/1.5 Inter,Arial,sans-serif;color:var(--sf-muted);pointer-events:none;transition:all .15s;max-width:calc(100% - 24px);overflow-wrap:anywhere}
+.reader-shell .sader-text-field .sader-text-input:is(:focus,:not(:placeholder-shown))+.sader-floating-label{top:.5625rem;transform:translateY(-100%);font-size:.75rem;font-weight:600}
+.reader-shell .sader-text-field .sader-text-input:focus+.sader-floating-label{color:var(--sf-ring)}
+.reader-shell .sader-invalid .sader-text-input:not(:focus)+.sader-floating-label{color:var(--sf-danger)}
+.reader-shell .sader-inset .sader-text-input{min-height:3.5rem;border-radius:calc(.625rem + 4px);padding:1.5rem .75rem .5rem;transition-duration:.3s}
+.reader-shell .sader-inset .sader-floating-label,.reader-shell .sader-inset .sader-text-input:is(:focus,:not(:placeholder-shown))+.sader-floating-label{left:.75rem;top:.5rem;transform:none;padding:0;background:transparent;font-size:.75rem;font-weight:400;line-height:1rem}
+.reader-shell .sader-multiline .sader-text-input{resize:vertical;min-height:120px;padding-bottom:.75rem}
+.sader-counter{display:block;padding:0 .75rem .5rem;text-align:right;font-size:.75rem;line-height:1.5;color:var(--sf-muted);pointer-events:none}
+.sader-calendar{display:flex;flex-direction:column;gap:8px;padding:4px 8px}
+.sader-calendar-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0 0 8px;font-weight:600}
+.sader-calendar-header>div{display:flex;gap:4px}
+.reader-shell .sader-calendar-header button{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border:0;border-radius:50%;background:transparent;padding:0}
+.sader-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));justify-items:center;gap:4px}
+.sader-weekdays span{display:flex;align-items:center;justify-content:center;min-height:32px;font-size:.75rem;font-weight:500;color:var(--sf-muted)}
+.reader-shell .sader-calendar-grid button{display:flex;align-items:center;justify-content:center;width:min(40px,100%);min-height:40px;padding:0;border:0;border-radius:12px;background:transparent;font:400 .875rem/1.5 Inter,Arial,sans-serif;color:var(--sf-foreground)}
+.reader-shell .sader-calendar-grid button:hover,.reader-shell .sader-calendar-header button:hover{background:var(--sf-accent)}
+.reader-shell .sader-calendar-grid button.selected{background:var(--sf-selected);color:var(--sf-on-selected);font-weight:600}
+.reader-shell .sader-calendar-grid button[aria-current=date]:not(.selected){font-weight:600;color:var(--sf-primary)}
+.reader-shell .sader-calendar-grid button:disabled{color:var(--sf-disabled);pointer-events:none}
+.reader-shell .sader-morph-panel button:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--sf-ring)}
+.sader-time-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:4px 8px;padding-top:8px;border-top:1px solid var(--sf-border)}
+.sader-time-title{display:block;text-align:center;margin-bottom:4px;font-size:.625rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--sf-muted)}
+.sader-time-scroll{height:200px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.reader-shell .sader-time-option{display:flex;align-items:center;justify-content:center;width:100%;height:40px;padding:0;border:0;border-radius:20px;background:transparent;color:var(--sf-muted);font:500 .875rem/1.5 Inter,Arial,sans-serif;transition:background .15s,color .15s}
+.reader-shell .sader-time-option:hover{background:var(--sf-hover);color:var(--sf-primary)}
+.reader-shell .sader-time-option.selected{background:var(--sf-selected);color:var(--sf-on-selected)}
+.sader-datetime{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+.sader-top-loader{position:fixed;inset:0 0 auto;z-index:10000;height:4px;overflow:hidden;border-radius:999px;background:var(--sf-accent);pointer-events:none}
+.sader-top-loader::after{content:"";position:absolute;inset-block:0;left:0;width:40%;border-radius:inherit;background:var(--sf-progress);animation:sader-progress .67s ease-in-out infinite}
+@keyframes sader-progress{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+@keyframes sader-progress-pulse{0%,100%{opacity:.3}50%{opacity:1}}
+@keyframes sader-field-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+@media(max-width:600px){.sader-datetime{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.sader-field *,.sader-popover-layer *{transition:none!important;animation:none!important}.sader-top-loader::after{transform:translateX(75%);animation:sader-progress-pulse 1.8s ease-in-out infinite}}

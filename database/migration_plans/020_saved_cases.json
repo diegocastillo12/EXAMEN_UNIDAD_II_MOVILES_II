@@ -1,0 +1,11 @@
+{
+  "version": "20261016002000",
+  "name": "saved_cases",
+  "traceability": "User-requested 2026-10-16 extension of HU-07 / RF-13: private save/unsave from case details; no assigned issue",
+  "sources": [
+    "tables/070_saved_cases.sql",
+    "functions/071_saved_case_commands.sql",
+    "policies/072_saved_cases_owner_policies.sql",
+    "grants/073_saved_cases_permissions.sql"
+  ]
+}

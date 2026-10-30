@@ -1,0 +1,5 @@
+{
+ "version": "20261011001800", "name": "recovery_report_links",
+ "traceability": "HU-05/RF-05, HU-06/RF-06: community searches and linked observations, instruction 2026-10-11",
+ "sources": ["tables/062_recovery_report_links.sql", "functions/063_recovery_report_commands.sql", "functions/064_recovery_public_projections.sql", "grants/065_recovery_permissions.sql"]
+}

@@ -1,0 +1,36 @@
+name: Backend validation
+on:
+  push:
+    paths: ['database/**', 'supabase/migrations/**', 'supabase/functions/pet-photo-process/**', '.github/workflows/backend.yml']
+  pull_request:
+    paths: ['database/**', 'supabase/migrations/**', 'supabase/functions/pet-photo-process/**', '.github/workflows/backend.yml']
+permissions:
+  contents: read
+jobs:
+  sql:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: database/tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: database/tests/package-lock.json
+      - run: npm ci
+      - run: npm test
+  photos:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: supabase/functions/pet-photo-process
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno run --allow-read --allow-write prepare-wasm.ts
+      - run: deno check index.ts
+      - run: deno test --allow-read --allow-env processor_test.ts handler_test.ts

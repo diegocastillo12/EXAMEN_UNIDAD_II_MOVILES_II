@@ -1,0 +1,6 @@
+{
+ "version":"20261010001600",
+ "name":"case_collections",
+ "traceability":"HU-05/RF-05 and HU-06/RF-06: owner cards and deletion of open/resolved cases, user instruction",
+ "sources":["tables/057_case_deletion.sql","functions/058_case_collection_commands.sql","policies/059_case_deletion_visibility.sql","grants/060_case_collection_permissions.sql"]
+}

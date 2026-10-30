@@ -1,0 +1,1 @@
+{"version":"20261009000700","name":"pet_deletion","traceability":"HU-03 / RF-03 (owner deletion requested by user)","sources":["tables/026_pet_deletion_marker.sql","functions/027_pet_deletion_commands.sql","policies/028_pet_deletion_storage_guard.sql","grants/029_pet_deletion_permissions.sql"]}

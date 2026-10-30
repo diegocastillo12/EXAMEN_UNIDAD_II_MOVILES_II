@@ -1,0 +1,6 @@
+{
+  "version": "20261018002400",
+  "name": "public_sightings",
+  "traceability": "HU-10.1 / RF-11 / issue #36; anonymous web submission via authorized server, exact points/private evidence and idempotent retries; requires 023",
+  "sources": ["tables/083_public_sightings.sql", "functions/084_submit_public_sighting.sql", "grants/085_public_sighting_permissions.sql"]
+}

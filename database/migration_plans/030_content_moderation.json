@@ -1,0 +1,6 @@
+{
+ "version":"20261018003000",
+ "name":"content_moderation",
+ "traceability":"HU-14.3 / RF-22,33 / issue #45. Requires029. Web-only moderation, private audited reads and independent visibility.",
+ "sources":["tables/102_content_moderation.sql","functions/103_moderation_commands.sql","functions/104_moderation_visibility.sql","grants/105_moderation_permissions.sql"]
+}

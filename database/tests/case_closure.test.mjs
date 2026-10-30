@@ -1,0 +1,120 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {test} from 'node:test';
+import {PGlite} from '@electric-sql/pglite';
+import {postgis} from '@electric-sql/pglite-postgis';
+const bundle=await readFile(new URL('../run_all.sql',import.meta.url),'utf8');
+const owner='11111111-1111-4111-8111-111111111128',other='22222222-2222-4222-8222-222222222228';
+const pet='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbb28',target='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa28';
+const uuid=n=>`cccccccc-cccc-4ccc-8ccc-${String(n).padStart(12,'0')}`;
+async function setup(t){
+ const db=await PGlite.create({extensions:{postgis}});t.after(()=>db.close());
+ await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema storage;
+ create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+ create table storage.objects(id uuid primary key,bucket_id text references storage.buckets(id),name text,metadata jsonb,unique(bucket_id,name));
+ alter table storage.objects enable row level security;grant usage on schema storage to authenticated,anon;grant select,insert,update,delete on storage.objects to authenticated;grant select on storage.objects to anon;
+ create table auth.users(id uuid primary key,aud text,role text,email text,raw_user_meta_data jsonb);
+ create function auth.uid() returns uuid language sql stable as $$select(nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
+ grant usage on schema auth to authenticated;`);
+ await db.exec(bundle);
+ await db.query('insert into auth.users(id) values($1),($2)',[owner,other]);
+ await db.query("insert into public.pets(id,owner_id,name,species,size,age_months,traits,active_case_count,case_history_at) values($1,$2,'Luna','dog','small',12,'Blanca',1,now())",[pet,owner]);
+ await db.query("insert into public.pet_photos(id,pet_id,owner_id,status,processed_at,content_hash,is_primary) values($1,$1,$2,'published',now(),repeat('a',64),true)",[pet,owner]);
+ await db.query("insert into public.lost_cases(id,owner_id,pet_id,pet_version,occurred_at,latitude,longitude,place_reference,public_latitude,public_longitude,pet_name,species,size,age_months,traits,photo_ids) values($1,$2,$3,1,now(),-12,-77,'PRIVATE',-12,-77,'Luna','dog','small',12,'Blanca',array[$3]::uuid[])",[target,owner,pet]);
+ await db.query("insert into public.found_cases(id,owner_id,status,occurred_at,latitude,longitude,place_reference,public_latitude,public_longitude,species,traits,photo_ids,published_at,report_kind) values($1,$2,'active',now(),-12,-77,'PRIVATE',-12,-77,'cat','Negra',array[$3]::uuid[],now(),'possible_loss')",[target,owner,pet]);
+ await db.query("insert into public.found_case_photos(id,case_id,owner_id,status,processed_at,content_hash) values($1,$2,$3,'ready',now(),repeat('a',64))",[pet,target,owner]);
+ for(const [bucket,parent] of [['pet-photo-renditions',pet],['found-photo-renditions',target]])await db.query("insert into storage.objects values(gen_random_uuid(),$1,$2,'{\"mimetype\":\"image/jpeg\",\"size\":100}')",[bucket,`${owner}/${parent}/${pet}.jpg`]);
+ for(const [source,slug] of [['lost','a'],['found','b']])await db.query('insert into public.case_public_links(case_source,case_id,owner_id,public_slug) values($1,$2,$3,$4)',[source,target,owner,slug.repeat(64)]);
+ const actor=async user=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({sub:user,role:'authenticated'})]);await db.exec('set role authenticated');};
+ const close=(n=1,source='lost',reason='Volvió a casa',note='La reconocí por su collar')=>db.query('select public.close_recovery_case($1,$2,$3,$4,$5) v',[uuid(n),source,target,reason,note]).then(r=>r.rows[0].v);
+ const read=(source='lost')=>db.query('select public.read_case_closure($1,$2) v',[source,target]).then(r=>r.rows[0].v);
+ return {db,actor,close,read};
+}
+test('HU13 owner-only closure is atomic, immutable and replayable with private evidence',async t=>{
+ const {db,actor,close,read}=await setup(t);
+ await db.exec('set role anon');await assert.rejects(close(),/permission denied/);await assert.rejects(read(),/permission denied/);
+ await actor(other);await assert.rejects(close(),/closure_forbidden/);await assert.rejects(read(),/timeline_forbidden/);
+ await actor(owner);
+ for(const reason of ['', '\u00a0\u3000', 'a'.repeat(501)])await assert.rejects(close(1,'lost',reason),/closure_invalid/);
+ await assert.rejects(close(1,'lost','ok','a'.repeat(501)),/closure_invalid/);
+ assert.equal((await read()).status,'active');
+ const first=await close();assert.equal(first.actor_id,owner);assert.equal(first.reason,'Volvió a casa');assert.ok(first.closed_at);
+ assert.deepEqual(await close(),first);assert.deepEqual(await close(1,'lost',' Volvió a casa ',' La reconocí por su collar '),first);
+ await assert.rejects(close(1,'lost','otro motivo'),/closure_conflict/);
+ await assert.rejects(close(2),/closure_closed/);
+ assert.deepEqual((await read()).receipt,first);
+ const timeline=(await db.query("select public.read_case_timeline('lost',$1) v",[target])).rows[0].v;
+ assert.equal(timeline.items.filter(e=>e.kind==='resolved').length,1);
+ assert.equal(timeline.items.find(e=>e.kind==='resolved').observed_at,first.closed_at);
+ for(const action of ['select * from','delete from','update']){
+  const sql=action==='update' ? "update public.case_closures set reason='changed'" : `${action} public.case_closures`;
+  await assert.rejects(db.query(sql),/permission denied/);
+ }
+ await db.exec('reset role');assert.equal((await db.query('select active_case_count from public.pets where id=$1',[pet])).rows[0].active_case_count,0);
+ await db.exec(bundle);await db.exec(bundle);await actor(owner);assert.deepEqual((await read()).receipt,first);assert.deepEqual(await close(),first);
+ await actor(other);await assert.rejects(close(),/closure_forbidden/);
+});
+test('HU13 existing QR, sightings, map projections, leased search push and subsequent episode follow closure',async t=>{
+ const {db,actor,close}=await setup(t);
+ await db.query('insert into public.alert_preferences(owner_id,enabled,push) values($1,true,true)',[owner]);
+ await actor(owner);await db.query("select public.register_push_device(repeat('t',25),true)");
+ await db.exec('reset role');await db.query("insert into public.public_sightings(id,case_source,case_id,request_hash,actor_hash,observed_at,latitude,longitude,location_source,comment,is_late) values($1,'lost',$2,repeat('a',64),repeat('b',64),now(),-12,-77,'manual','secret',false)",[uuid(100),target]);
+ await db.exec('set role service_role');const job=(await db.query('select public.claim_notification_delivery() v')).rows[0].v;assert.ok(job.lease);
+ for(const [source,slug,n] of [['lost','a',1],['found','b',2]]){
+  await db.exec('reset role;set role service_role');assert.equal((await db.query('select public.read_qr_case($1) v',[slug.repeat(64)])).rows[0].v.state,'active');
+  await actor(owner);const receipt=await close(n,source);
+  await db.exec('reset role;set role service_role');const qr=(await db.query('select public.read_qr_case($1) v',[slug.repeat(64)])).rows[0].v;
+  assert.deepEqual(qr,{state:'closed',resolution:'resolved',closed_at:receipt.closed_at});
+  const report={id:uuid(n+200),observedAt:new Date(Date.now()-60000).toISOString(),point:{latitude:-12,longitude:-77,source:'manual',accuracy:null},comment:''};
+  await assert.rejects(db.query('select public.submit_public_sighting($1,$2,$3,$4)',[slug.repeat(64),report,'a'.repeat(64),'b'.repeat(64)]),/sighting_closed/);
+  await assert.rejects(db.query('select public.submit_app_sighting($1,$2,$3,$4,$5,$6,$7)',[source,target,owner,report,'a'.repeat(64),'b'.repeat(64),null]),/sighting_closed/);
+ }
+ await db.exec('reset role');
+ const cancelled=(await db.query('select status,lease,last_error from public.notification_deliveries where notification_id=$1',[job.id])).rows[0];
+ assert.deepEqual(cancelled,{status:'cancelled',lease:null,last_error:'case_closed'});
+ await db.exec('set role service_role');await assert.rejects(db.query('select public.finish_notification_delivery($1,$2,true,null)',[job.id,job.lease]),/alerts_lease_conflict/);
+ await db.exec('reset role');assert.equal((await db.query("select count(*)::int n from public.notifications where kind='resolved'")).rows[0].n,2);
+ assert.equal((await db.query("select count(*)::int n from public.notifications where kind='update'")).rows[0].n,1,'Inbox history survives');
+ await actor(other);assert.equal((await db.query('select * from public.read_recovery_pet_case($1)',[target])).rows.length,0);
+ await actor(owner);assert.equal((await db.query('select public.read_recovery_pet_case($1) v',[target])).rows[0].v.status,'resolved');
+ const version=(await db.query('select version from public.pets where id=$1',[pet])).rows[0].version;
+ const newId=uuid(300);await db.query('select public.publish_lost_case($1,$2,$3,$4,-12::float8,-77::float8,$5,$6::uuid[])',[newId,pet,version,new Date(Date.now()-60000).toISOString(),'Parque',[pet]]);
+ assert.equal((await db.query('select public.read_recovery_pet_case($1) v',[newId])).rows[0].v.status,'active');
+ assert.equal((await db.query('select public.read_case_closure($1,$2) v',['lost',target])).rows[0].v.status,'resolved');
+});
+test('HU13 compatibility records new legacy commands and preserves old closures without backfill',async t=>{
+ const {db,actor,read}=await setup(t);await actor(owner);
+ await db.query('select public.resolve_recovery_search($1,false)',[target]);
+ const receipt=(await read()).receipt;assert.equal(receipt.reason,'Recuperación confirmada por el responsable');
+ await db.query('select public.resolve_recovery_search($1,false)',[target]);assert.deepEqual((await read()).receipt,receipt);
+ await db.exec('reset role');await db.query("update public.found_cases set status='resolved' where id=$1",[target]);
+ await actor(owner);await db.query('select public.resolve_recovery_search($1,true)',[target]);assert.equal((await read('found')).receipt,null);
+ await actor(other);await assert.rejects(db.query('select public.resolve_recovery_search($1,false)',[target]),/case_unauthorized/);
+});
+test('HU13 failure rolls back receipt, case, pet and alerts; queued competing commands cannot close twice',async t=>{
+ const {db,actor,close}=await setup(t);
+ await actor(owner);
+ assert.equal((await db.query("select public.explore_cases(p_status=>'active',p_latitude=>-12,p_longitude=>-77,p_radius_meters=>5000) v")).rows[0].v.items.some(i=>i.id===target&&i.source==='lost'),true);
+ await db.exec('reset role');
+ await db.exec(`create function public.fail_test_closure() returns trigger language plpgsql as $$begin raise exception 'simulated_event_failure';end$$;
+ create trigger fail_test_closure before insert on public.case_events for each row execute function public.fail_test_closure();`);
+ await actor(owner);await assert.rejects(close(),/simulated_event_failure/);
+ await db.exec('reset role');
+ assert.equal((await db.query('select count(*)::int n from public.case_closures')).rows[0].n,0);
+ assert.equal((await db.query('select active_case_count from public.pets where id=$1',[pet])).rows[0].active_case_count,1);
+ assert.equal((await db.query('select status from public.lost_cases where id=$1',[target])).rows[0].status,'active');
+ await db.exec('drop trigger fail_test_closure on public.case_events;drop function public.fail_test_closure()');
+ await db.query('update public.pets set active_case_count=0 where id=$1',[pet]);
+ await actor(owner);await assert.rejects(close(),/pets_case_lifecycle/);
+ await db.exec('reset role');
+ assert.equal((await db.query('select count(*)::int n from public.case_closures')).rows[0].n,0);
+ await db.query('update public.pets set active_case_count=1 where id=$1',[pet]);
+ await actor(owner);
+ // PGlite queues requests on one connection. Hosted multi-connection locking remains a demo check.
+ const results=await Promise.allSettled([close(1),close(2)]);
+ assert.equal(results.filter(r=>r.status==='fulfilled').length,1);
+ assert.match(String(results.find(r=>r.status==='rejected').reason),/closure_closed/);
+ assert.equal((await db.query("select public.explore_cases(p_status=>'active',p_latitude=>-12,p_longitude=>-77,p_radius_meters=>5000) v")).rows[0].v.items.some(i=>i.id===target&&i.source==='lost'),false);
+ assert.equal((await db.query("select public.explore_cases(p_status=>'resolved',p_latitude=>-12,p_longitude=>-77,p_radius_meters=>5000) v")).rows[0].v.items.some(i=>i.id===target&&i.source==='lost'&&i.status==='resolved'),true);
+ await db.exec('reset role');assert.equal((await db.query("select count(*)::int n from public.case_events where event_type='resolved'")).rows[0].n,1);
+});

@@ -1,0 +1,9 @@
+{
+  "version": "20261018002500",
+  "name": "app_sightings",
+  "traceability": "HU-10.2 / RF-11 / #37. Shared private sightings for authenticated Android; requires 024",
+  "sources": [
+    "tables/086_app_sightings.sql",
+    "functions/087_shared_sighting_commands.sql"
+  ]
+}

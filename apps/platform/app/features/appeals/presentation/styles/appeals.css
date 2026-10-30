@@ -1,0 +1,7 @@
+.appeals-screen{width:min(100%,56rem);margin-inline:auto;padding:1rem 0 5rem;min-width:0}
+.appeals-header .glass-navigation{position:static;flex-shrink:0}
+.appeals-header,.appeals-tools{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem}
+.appeals-list,.appeals-form{display:grid;gap:1.5rem}
+.appeals-card{padding:clamp(1rem,3vw,2rem);border:1px solid #e5e7eb;border-radius:1.5rem;background:#fff;overflow-wrap:anywhere}
+.appeals-card h2{font-size:1.25rem;font-weight:500;line-height:1.4;color:#454746}
+.appeals-card p{white-space:pre-wrap;line-height:1.6;color:#454746}

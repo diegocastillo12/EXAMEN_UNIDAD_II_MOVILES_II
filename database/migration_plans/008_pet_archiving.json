@@ -1,0 +1,1 @@
+{"version":"20261009000800","name":"pet_archiving","traceability":"HU-03 / RF-03 (archive, restore and guarded permanent deletion requested by user)","sources":["tables/030_pet_archiving.sql","functions/031_pet_lifecycle_commands.sql","triggers/032_pet_case_history_guard.sql","grants/033_pet_lifecycle_permissions.sql"]}

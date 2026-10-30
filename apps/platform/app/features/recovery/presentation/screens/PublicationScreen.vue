@@ -1,0 +1,12 @@
+<script setup lang="ts">
+const props=defineProps<{actor:string;source:'lost'|'found';id:string}>();
+const model=useNuxtApp().$publicationModel(props.actor),state=shallowRef(model.state),toast=useTemplateRef('toast');
+const unsubscribe=model.subscribe(s=>{state.value=s;});let channel:BroadcastChannel|undefined;
+const load=()=>model.load(props.source,props.id);
+watch(()=>state.value.notice,()=>{if(state.value.failure)toast.value?.show('No pudimos abrir esta ficha. Puede que haya cambiado su disponibilidad.');});
+onMounted(()=>{void load();channel=new BroadcastChannel('eh-access');channel.onmessage=()=>model.invalidate();});
+onBeforeUnmount(()=>{unsubscribe();model.dispose();channel?.close();});
+const species=(s:string)=>({dog:'Perro',cat:'Gato',other:'Mascota'}[s]||'Mascota');
+</script>
+<template><section class="publication-screen"><TopToast ref="toast" /><EntityPageHeader title="Ficha del caso" back-label="Volver" @back="navigateTo('/coincidencias')" /><ContentSkeleton v-if="state.busy && !state.data" label="Consultando ficha" /><ActionButton v-else-if="state.failure" @click="load">Reintentar</ActionButton><StaggerReveal v-else-if="state.data" as="article"><h2>{{state.data.name||species(state.data.species)}}</h2><p>{{state.data.status==='active'?'Caso activo':'Caso cerrado'}} · {{species(state.data.species)}}</p><div class="publication-gallery"><img v-for="index in state.data.photos" :key="index" :src="'/api/recovery/photo?source='+source+'&id='+id+'&index='+(index-1)" :alt="'Fotografía '+index+' de la mascota'" /></div><p>{{state.data.traits}}</p><p>{{new Date(state.data.occurredAt).toLocaleString('es-PE',{timeZone:'America/Lima'})}}</p><p v-if="state.data.custody">{{state.data.custody==='with_me'?'Está bajo el cuidado del reportante':'No está bajo el cuidado del reportante'}}</p><LocationMap :center="{latitude:state.data.latitude,longitude:state.data.longitude}" :point="{latitude:state.data.latitude,longitude:state.data.longitude}" :disabled="true" :invalid="false" @failed="retry=>toast?.show('No pudimos mostrar el mapa.',retry)" /><p>Ubicación pública aproximada. El punto exacto y la referencia permanecen privados.</p></StaggerReveal></section></template>
+<style scoped>.publication-screen{width:min(100%,48rem);margin:auto;padding-bottom:3rem}.publication-heading{display:flex;gap:1rem;align-items:center}.publication-gallery{display:flex;overflow-x:auto;gap:1rem}.publication-gallery img{width:min(100%,24rem);max-height:28rem;object-fit:cover;border-radius:1.5rem}.publication-screen p{line-height:1.6;color:#454746}</style>

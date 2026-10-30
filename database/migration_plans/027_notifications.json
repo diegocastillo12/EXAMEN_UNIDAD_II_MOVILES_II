@@ -1,0 +1,6 @@
+{
+ "version":"20261018002700",
+ "name":"notifications",
+ "traceability":"HU-12.1/#40, HU-12.2/#41, HU-12.3/#42 / RF-16,17,18. Requires026.",
+ "sources":["tables/091_notifications.sql","functions/092_notification_commands.sql","functions/093_push_delivery_commands.sql","triggers/094_notification_events.sql","grants/095_notification_permissions.sql"]
+}

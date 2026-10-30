@@ -1,0 +1,5 @@
+{
+ "version":"20261015001900", "name":"explore_cases",
+ "traceability":"HU-07.1 / RF-13 / issue #32: filtered public list and geographic keyset pagination",
+ "sources":["extensions/066_explore_postgis.sql","indexes/067_explore_public_locations.sql","functions/068_explore_cases.sql","grants/069_explore_permissions.sql"]
+}

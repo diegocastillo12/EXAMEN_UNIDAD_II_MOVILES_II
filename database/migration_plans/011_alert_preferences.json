@@ -1,0 +1,11 @@
+{
+  "version": "20261010001100",
+  "name": "alert_preferences",
+  "traceability": "HU-02.2 / RF-02,16 / issue #27: private versioned alert choices, without delivery",
+  "sources": [
+    "tables/040_create_alert_preferences.sql",
+    "functions/041_save_alert_preferences.sql",
+    "policies/042_alert_preferences_owner_policies.sql",
+    "grants/043_alert_preferences_permissions.sql"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+ "version":"20261018002600",
+ "name":"case_timeline",
+ "traceability":"HU-11.1/#38 and HU-11.2/#39 / RF-12,14. Owner-only chronology and audited optimistic reviews. Requires025.",
+ "sources":["tables/088_sighting_reviews.sql","functions/089_case_timeline_commands.sql","grants/090_case_timeline_permissions.sql"]
+}

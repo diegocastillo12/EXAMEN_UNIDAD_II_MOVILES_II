@@ -1,0 +1,5 @@
+{
+  "version": "20261008000300",
+  "name": "profile_avatars",
+  "sources": ["tables/010_create_profile_avatar_bucket.sql", "policies/011_profile_avatar_owner_policies.sql"]
+}
